@@ -36,6 +36,7 @@ Newsletter Demo - http://grapesjs.com/demo-newsletter-editor.html
 * [Plugins](#plugins)
 * [Support](#support)
 * [Changelog](https://github.com/artf/grapesjs/releases)
+* [Contributing](https://github.com/artf/grapesjs/blob/master/CONTRIBUTING.md)
 * [License](#license)
 
 
@@ -190,6 +191,7 @@ $ npm test
 * [grapesjs-style-gradient](https://github.com/artf/grapesjs-style-gradient) - Add a gradient type input
 * [grapesjs-blocks-flexbox](https://github.com/artf/grapesjs-blocks-flexbox) - Add the flexbox block
 * [grapesjs-lory-slider](https://github.com/artf/grapesjs-lory-slider) - Slider component by using [lory](https://github.com/meandmax/lory)
+* [grapesjs-tabs](https://github.com/artf/grapesjs-tabs) - Simple tabs component
 
 ### Presets
 * [grapesjs-preset-webpage](https://github.com/artf/grapesjs-preset-webpage) - Webpage Builder

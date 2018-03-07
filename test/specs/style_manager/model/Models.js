@@ -380,19 +380,24 @@ module.exports = {
       });
 
       it('Build top, left, right, bottom', () => {
-        var res = {
+        var resH = {
           type: 'integer',
-          units: ['px', '%'],
+          units: ['px', '%', 'vh'],
           defaults: 0
         };
-        res.property = 'top';
-        expect(obj.build('top')).toEqual([res]);
-        res.property = 'right';
-        expect(obj.build('right')).toEqual([res]);
-        res.property = 'bottom';
-        expect(obj.build('bottom')).toEqual([res]);
-        res.property = 'left';
-        expect(obj.build('left')).toEqual([res]);
+        var resW = {
+          type: 'integer',
+          units: ['px', '%', 'vw'],
+          defaults: 0
+        };
+        resH.property = 'top';
+        expect(obj.build('top')).toEqual([resH]);
+        resW.property = 'right';
+        expect(obj.build('right')).toEqual([resW]);
+        resH.property = 'bottom';
+        expect(obj.build('bottom')).toEqual([resH]);
+        resW.property = 'left';
+        expect(obj.build('left')).toEqual([resW]);
       });
 
       it('Build height family', () => {
@@ -436,28 +441,28 @@ module.exports = {
               fixedValues: ['initial', 'inherit', 'auto'],
               property: 'margin-top',
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vh'],
               defaults: 0
             },
             {
               fixedValues: ['initial', 'inherit', 'auto'],
               property: 'margin-right',
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vw'],
               defaults: 0
             },
             {
               fixedValues: ['initial', 'inherit', 'auto'],
               property: 'margin-bottom',
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vh'],
               defaults: 0
             },
             {
               fixedValues: ['initial', 'inherit', 'auto'],
               property: 'margin-left',
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vw'],
               defaults: 0
             }
           ]
@@ -474,7 +479,7 @@ module.exports = {
               property: 'padding-top',
               fixedValues: ['initial', 'inherit', 'auto'],
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vh'],
               defaults: 0,
               min: 0
             },
@@ -482,7 +487,7 @@ module.exports = {
               property: 'padding-right',
               fixedValues: ['initial', 'inherit', 'auto'],
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vw'],
               defaults: 0,
               min: 0
             },
@@ -490,7 +495,7 @@ module.exports = {
               property: 'padding-bottom',
               fixedValues: ['initial', 'inherit', 'auto'],
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vh'],
               defaults: 0,
               min: 0
             },
@@ -498,7 +503,7 @@ module.exports = {
               property: 'padding-left',
               fixedValues: ['initial', 'inherit', 'auto'],
               type: 'integer',
-              units: ['px', '%'],
+              units: ['px', '%', 'vw'],
               defaults: 0,
               min: 0
             }

@@ -282,12 +282,6 @@ module.exports = () => ({
         case 'padding-right':
         case 'padding-bottom':
         case 'padding-left':
-        case 'min-height':
-        case 'min-width':
-        case 'max-height':
-        case 'max-width':
-        case 'width':
-        case 'height':
         case 'text-shadow-h':
         case 'text-shadow-v':
         case 'text-shadow-blur':
@@ -299,6 +293,16 @@ module.exports = () => ({
         case 'box-shadow-h':
         case 'box-shadow-v':
           obj.units = ['px', '%'];
+          break;
+        case 'min-height':
+        case 'max-height':
+        case 'height':
+          obj.units = ['px', '%', 'vh'];
+          break;
+        case 'min-width':
+        case 'max-width':
+        case 'width':
+          obj.units = ['px', '%', 'vw'];
           break;
         case 'font-size':
         case 'letter-spacing':

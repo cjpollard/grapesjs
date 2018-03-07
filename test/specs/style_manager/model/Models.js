@@ -395,22 +395,32 @@ module.exports = {
         expect(obj.build('left')).toEqual([res]);
       });
 
-      it('Build width and height family', () => {
+      it('Build height family', () => {
         var res = {
           type: 'integer',
-          units: ['px', '%'],
+          units: ['px', '%', 'vh'],
           defaults: 'auto',
           fixedValues: ['initial', 'inherit', 'auto'],
           min: 0
         };
-        res.property = 'width';
-        expect(obj.build('width')).toEqual([res]);
         res.property = 'height';
         expect(obj.build('height')).toEqual([res]);
         res.property = 'min-height';
         expect(obj.build('min-height')).toEqual([res]);
         res.property = 'max-height';
         expect(obj.build('max-height')).toEqual([res]);
+      });
+
+      it('Build width family', () => {
+        var res = {
+          type: 'integer',
+          units: ['px', '%', 'vw'],
+          defaults: 'auto',
+          fixedValues: ['initial', 'inherit', 'auto'],
+          min: 0
+        };
+        res.property = 'width';
+        expect(obj.build('width')).toEqual([res]);
         res.property = 'min-width';
         expect(obj.build('min-width')).toEqual([res]);
         res.property = 'max-width';

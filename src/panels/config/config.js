@@ -69,7 +69,7 @@ module.exports = {
         },
         {
           id: ola,
-          className: 'fa fa-bars',
+          className: 'fa fa-server',
           command: ola,
           attributes: { title: 'Open Layer Manager' }
         },

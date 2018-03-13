@@ -132,6 +132,8 @@ module.exports = Backbone.Model.extend(Styleable).extend({
     var wd = width || '';
     var selectorsAdd = ruleProps.selectorsAdd || '';
     var atRuleType = ruleProps.atRuleType || '';
+    var style = ruleProps.style || '';
+    var cStyle = this.get('style');
     var cId = 'cid';
     //var a1 = _.pluck(selectors.models || selectors, cId);
     //var a2 = _.pluck(this.get('selectors').models, cId);
@@ -158,6 +160,13 @@ module.exports = Backbone.Model.extend(Styleable).extend({
       this.get('atRuleType') !== atRuleType
     ) {
       return f;
+    }
+
+    if (style instanceof Object && ruleProps.singleAtRule === 1) {
+      for (let key in style) {
+        if (!cStyle.hasOwnProperty(key)) return f;
+        if (cStyle[key] !== style[key]) return f;
+      }
     }
 
     return true;

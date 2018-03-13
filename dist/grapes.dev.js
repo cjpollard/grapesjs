@@ -17739,12 +17739,14 @@ module.exports = {
     var u = 'px';
     bStyle.display = 'block';
     var canvasPos = canvas.getCanvasView().getPosition();
-    var badgeH = badge ? badge.offsetHeight : 0;
-    var badgeW = badge ? badge.offsetWidth : 0;
-    var top = pos.top - badgeH < canvasPos.top ? canvasPos.top : pos.top - badgeH;
-    var left = pos.left + badgeW < canvasPos.left ? canvasPos.left : pos.left;
-    bStyle.top = top + u;
-    bStyle.left = left + u;
+    if (canvasPos) {
+      var badgeH = badge ? badge.offsetHeight : 0;
+      var badgeW = badge ? badge.offsetWidth : 0;
+      var top = pos.top - badgeH < canvasPos.top ? canvasPos.top : pos.top - badgeH;
+      var left = pos.left + badgeW < canvasPos.left ? canvasPos.left : pos.left;
+      bStyle.top = top + u;
+      bStyle.left = left + u;
+    }
   },
 
 
@@ -17966,10 +17968,12 @@ module.exports = {
       elPos: elPos,
       event: 'toolbarPosUpdate'
     });
-    var leftPos = pos.left + pos.elementWidth - pos.targetWidth;
-    toolbarStyle.top = pos.top + unit;
-    toolbarStyle.left = (leftPos < 0 ? 0 : leftPos) + unit;
-    toolbarStyle.display = origDisp;
+    if (pos) {
+      var leftPos = pos.left + pos.elementWidth - pos.targetWidth;
+      toolbarStyle.top = pos.top + unit;
+      toolbarStyle.left = (leftPos < 0 ? 0 : leftPos) + unit;
+      toolbarStyle.display = origDisp;
+    }
   },
 
 
@@ -21952,24 +21956,6 @@ module.exports = Backbone.View.extend({
           videoNode.src = fileURL
           */
 
-          /*
-          // Show local video files, http://jsfiddle.net/dsbonev/cCCZ2/embedded/result,js,html,css/
-          var URL = window.URL || window.webkitURL
-          var file = this.files[0]
-           var type = file.type
-           var videoNode = document.createElement('video');
-           var canPlay = videoNode.canPlayType(type) // can use also for 'audio' types
-           if (canPlay === '') canPlay = 'no'
-           var message = 'Can play type "' + type + '": ' + canPlay
-           var isError = canPlay === 'no'
-           displayMessage(message, isError)
-             if (isError) {
-             return
-           }
-             var fileURL = URL.createObjectURL(file)
-           videoNode.src = fileURL
-          */
-
           // If it's an image, try to find its size
           if (type === 'image') {
             var data = {
@@ -22210,6 +22196,8 @@ module.exports = Backbone.Model.extend(_Styleable2.default).extend({
     var wd = width || '';
     var selectorsAdd = ruleProps.selectorsAdd || '';
     var atRuleType = ruleProps.atRuleType || '';
+    var style = ruleProps.style || '';
+    var cStyle = this.get('style');
     var cId = 'cid';
     //var a1 = _.pluck(selectors.models || selectors, cId);
     //var a2 = _.pluck(this.get('selectors').models, cId);
@@ -22234,6 +22222,13 @@ module.exports = Backbone.Model.extend(_Styleable2.default).extend({
 
     if (this.get('state') !== st || this.get('mediaText') !== wd || this.get('selectorsAdd') !== selectorsAdd || this.get('atRuleType') !== atRuleType) {
       return f;
+    }
+
+    if (style instanceof Object && ruleProps.singleAtRule === 1) {
+      for (var key in style) {
+        if (!cStyle.hasOwnProperty(key)) return f;
+        if (cStyle[key] !== style[key]) return f;
+      }
     }
 
     return true;
@@ -22572,18 +22567,20 @@ module.exports = Backbone.View.extend({
 
   /**
    * Add to collection
-   * @param  {Object} Model
-   *
-   * @return  void
+   * @param {Model} model
+   * @param {Collection} coll
+   * @param {Object} opts
    * @private
    * */
   addTo: function addTo(model) {
+    var coll = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
     var em = this.config.em;
     var i = this.collection.indexOf(model);
     this.addToCollection(model, null, i);
 
-    if (em && !model.opt.temporary) {
-      em.trigger('add:component', model); // @deprecated
+    if (em && !opts.temporary) {
       em.trigger('component:add', model);
     }
   },
@@ -23631,7 +23628,7 @@ module.exports = Backbone.Model.extend({
   defaults: {
     id: '',
     label: '',
-    open: true,
+    open: false,
     attributes: {}
   }
 });
@@ -24951,8 +24948,8 @@ module.exports = Backbone.Model.extend({
       }
     });
 
-    sm.store(store, function () {
-      clb && clb();
+    sm.store(store, function (res) {
+      clb && clb(res);
       _this4.set('changesCount', 0);
       _this4.trigger('storage:store', store);
     });
@@ -26125,6 +26122,7 @@ module.exports = Backbone.View.extend({
 
       if (!dropContent) {
         // Putting `avoidStore` here will make the UndoManager behave wrong
+        opts.temporary = 1;
         modelTemp = targetCollection.add({}, _extends({}, opts));
 
         if (model) {
@@ -33500,16 +33498,27 @@ module.exports = __webpack_require__(0).Model.extend({
         });
 
         // Get at-rules
-        for (var atRule in atRules) {
+
+        var _loop = function _loop(atRule) {
           var rulesStr = '';
           var mRules = atRules[atRule];
           mRules.forEach(function (rule) {
-            return rulesStr += _this2.buildFromRule(rule, dump);
+            // Special case for multiple font-faces on one page
+            var ruleStr = _this2.buildFromRule(rule, dump);
+            if (atRule === "@font-face") {
+              code += atRule + '{' + ruleStr + '}';
+            } else {
+              rulesStr += ruleStr;
+            }
           });
 
           if (rulesStr) {
             code += atRule + '{' + rulesStr + '}';
           }
+        };
+
+        for (var atRule in atRules) {
+          _loop(atRule);
         }
 
         em && em.getConfig('clearStyles') && rules.remove(dump);
@@ -35640,7 +35649,7 @@ module.exports = {
       attributes: { title: 'Settings' }
     }, {
       id: ola,
-      className: 'fa fa-bars',
+      className: 'fa fa-database',
       command: ola,
       attributes: { title: 'Open Layer Manager' }
     }, {
@@ -36381,16 +36390,18 @@ module.exports = function () {
         event: 'rteToolbarPosUpdate'
       });
 
-      if (config.adjustToolbar) {
-        // Move the toolbar down when the top canvas edge is reached
-        if (pos.top <= pos.canvasTop) {
-          pos.top = pos.elementTop + pos.elementHeight;
+      if (pos) {
+        if (config.adjustToolbar) {
+          // Move the toolbar down when the top canvas edge is reached
+          if (pos.top <= pos.canvasTop) {
+            pos.top = pos.elementTop + pos.elementHeight;
+          }
         }
-      }
 
-      var toolbarStyle = toolbar.style;
-      toolbarStyle.top = pos.top + un;
-      toolbarStyle.left = pos.left + un;
+        var toolbarStyle = toolbar.style;
+        toolbarStyle.top = pos.top + un;
+        toolbarStyle.left = pos.left + un;
+      }
     },
 
 
@@ -40007,24 +40018,6 @@ module.exports = function () {
 
         // Units
         switch (prop) {
-          case 'top':
-          case 'right':
-          case 'bottom':
-          case 'left':
-          case 'margin-top':
-          case 'margin-right':
-          case 'margin-bottom':
-          case 'margin-left':
-          case 'padding-top':
-          case 'padding-right':
-          case 'padding-bottom':
-          case 'padding-left':
-          case 'min-height':
-          case 'min-width':
-          case 'max-height':
-          case 'max-width':
-          case 'width':
-          case 'height':
           case 'text-shadow-h':
           case 'text-shadow-v':
           case 'text-shadow-blur':
@@ -40036,6 +40029,28 @@ module.exports = function () {
           case 'box-shadow-h':
           case 'box-shadow-v':
             obj.units = ['px', '%'];
+            break;
+          case 'top':
+          case 'bottom':
+          case 'margin-top':
+          case 'margin-bottom':
+          case 'padding-top':
+          case 'padding-bottom':
+          case 'min-height':
+          case 'max-height':
+          case 'height':
+            obj.units = ['px', '%', 'vh'];
+            break;
+          case 'right':
+          case 'left':
+          case 'margin-right':
+          case 'margin-left':
+          case 'padding-right':
+          case 'padding-left':
+          case 'min-width':
+          case 'max-width':
+          case 'width':
+            obj.units = ['px', '%', 'vw'];
             break;
           case 'font-size':
           case 'letter-spacing':
@@ -41942,7 +41957,10 @@ module.exports = {
   labelPlhHref: 'eg. https://google.com',
 
   // Default options for the target input
-  optionsTarget: [{ value: '', name: 'This window' }, { value: '_blank', name: 'New window' }]
+  optionsTarget: [{ value: '', name: 'This window' }, { value: '_blank', name: 'New window' }],
+
+  // Text to show in case no element selected
+  textNoElement: 'Select an element before using Trait Manager'
 };
 
 /***/ }),
@@ -44405,6 +44423,7 @@ module.exports = function () {
     getTargetToElementDim: function getTargetToElementDim(target, element, options) {
       var opts = options || {};
       var canvasPos = CanvasView.getPosition();
+      if (!canvasPos) return;
       var pos = opts.elPos || CanvasView.getElementPos(element);
       var toRight = options.toRight || 0;
       var targetHeight = opts.targetHeight || target.offsetHeight;
@@ -45088,7 +45107,9 @@ module.exports = Backbone.View.extend({
    * @private
    */
   getPosition: function getPosition() {
-    var bEl = this.frame.el.contentDocument.body;
+    var doc = this.frame.el.contentDocument;
+    if (!doc) return;
+    var bEl = doc.body;
     var fo = this.getFrameOffset();
     var co = this.getCanvasOffset();
     return {
@@ -45116,8 +45137,12 @@ module.exports = Backbone.View.extend({
     // In editor, I make use of setTimeout as during the append process of elements
     // those will not be available immediatly, therefore 'item' variable
     var script = document.createElement('script');
-    script.innerText = '\n        setTimeout(function() {\n          var item = document.getElementById(\'' + id + '\');\n          if (!item) return;\n          (function(){\n            ' + model.getScriptString() + ';\n          }.bind(item))()\n        }, 1);';
-    view.scriptContainer.get(0).appendChild(script);
+    script.innerHTML = '\n        setTimeout(function() {\n          var item = document.getElementById(\'' + id + '\');\n          if (!item) return;\n          (function(){\n            ' + model.getScriptString() + ';\n          }.bind(item))()\n        }, 1);';
+    // #873
+    // Adding setTimeout will make js components work on init of the editor
+    setTimeout(function () {
+      return view.scriptContainer.get(0).appendChild(script);
+    }, 0);
   },
 
 
@@ -46329,24 +46354,63 @@ var $ = Backbone.$;
 
 module.exports = {
   run: function run(editor, sender) {
+    this.sender = sender;
+
     var config = editor.Config;
     var pfx = config.stylePrefix;
     var tm = editor.TraitManager;
     var panelC;
-    if (!this.obj) {
+
+    if (!this.$cn) {
       var tmView = tm.getTraitsViewer();
       var confTm = tm.getConfig();
-      this.obj = $('<div></div>').append('<div class="' + pfx + 'traits-label">' + confTm.labelContainer + '</div>').get(0);
-      this.obj.appendChild(tmView.render().el);
+
+      // Main container
+      this.$cn = $('<div></div>');
+      // Secondary container
+      this.$cn2 = $('<div></div>');
+      this.$cn.append(this.$cn2);
+
+      this.$header = $('<div>').append('<div class="' + confTm.stylePrefix + 'header">' + confTm.textNoElement + '</div>');
+
+      this.$cn.append(this.$header);
+
+      this.$cn2.append('<div class="' + pfx + 'traits-label">' + confTm.labelContainer + '</div>');
+      this.$cn2.append(tmView.render().el);
+
       var panels = editor.Panels;
+
       if (!panels.getPanel('views-container')) panelC = panels.addPanel({ id: 'views-container' });else panelC = panels.getPanel('views-container');
-      panelC.set('appendContent', this.obj).trigger('change:appendContent');
+
+      panelC.set('appendContent', this.$cn.get(0)).trigger('change:appendContent');
+
+      this.target = editor.getModel();
+      this.listenTo(this.target, 'change:selectedComponent', this.toggleTm);
     }
 
-    this.obj.style.display = 'block';
+    this.toggleTm();
+  },
+
+
+  /**
+   * Toggle Trait Manager visibility
+   * @private
+   */
+  toggleTm: function toggleTm() {
+    var sender = this.sender;
+    if (sender && sender.get && !sender.get('active')) return;
+
+    if (this.target.get('selectedComponent')) {
+      this.$cn2.show();
+      this.$header.hide();
+    } else {
+      this.$cn2.hide();
+      this.$header.show();
+    }
   },
   stop: function stop() {
-    if (this.obj) this.obj.style.display = 'none';
+    this.$cn2 && this.$cn2.hide();
+    this.$header && this.$header.hide();
   }
 };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
@@ -47418,6 +47482,7 @@ module.exports = Backbone.View.extend({
     var label = this.model.get('label');
     el.className += ' ' + className + ' ' + pfx + 'one-bg ' + pfx + 'four-color-h';
     el.innerHTML = '<div class="' + className + '-label">' + label + '</div>';
+    el.title = el.textContent.trim();
     (0, _mixins.hasDnd)(this.em) && el.setAttribute('draggable', true);
     return this;
   }

@@ -16875,7 +16875,7 @@ module.exports = ComponentView.extend({
   render: function render() {
     this.updateAttributes();
     this.updateClasses();
-
+    this.$el.attr('style', 'max-width: 100%;');
     var actCls = this.$el.attr('class') || '';
     if (!this.model.get('src')) this.$el.attr('class', (actCls + ' ' + this.classEmpty).trim());
 

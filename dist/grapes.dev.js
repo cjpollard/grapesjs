@@ -4914,6 +4914,7 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     var ilen = componentIndex.toString().length + 2;
     var uid = (Math.random() + 1.1).toString(36).slice(-ilen);
     var nextId = 'i' + uid;
+    console.log(model.get("type"), model.get("tagName"));
     componentList[nextId] = model;
     return nextId;
   },

@@ -808,7 +808,11 @@ const Component = Backbone.Model.extend(Styleable).extend(
       // Testing 1000000 components with `+ 2` returns 0 collisions
       const ilen = componentIndex.toString().length + 2;
       const uid = (Math.random() + 1.1).toString(36).slice(-ilen);
-      const nextId = model.get('type') + '-i' + uid;
+      const tid = model
+        .getName()
+        .toLowerCase()
+        .replace(/\s+/g, '');
+      const nextId = tid + '-i' + uid;
       componentList[nextId] = model;
       return nextId;
     },

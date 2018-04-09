@@ -4913,8 +4913,8 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     // Testing 1000000 components with `+ 2` returns 0 collisions
     var ilen = componentIndex.toString().length + 2;
     var uid = (Math.random() + 1.1).toString(36).slice(-ilen);
-    var nextId = 'i' + uid;
-    console.log(model.get("type"), model.get("tagName"));
+    var tid = model.getName().toLowerCase().replace(/\s+/g, '');
+    var nextId = tid + '-i' + uid;
     componentList[nextId] = model;
     return nextId;
   },
@@ -24419,6 +24419,12 @@ module.exports = {
   // Width for the editor container
   width: '100%',
 
+  // By default Grapes injects base CSS into the canvas. For example, it sets body margin to 0
+  // and sets a default background color of white. This CSS is desired in most cases.
+  // use this property if you wish to overwrite the base CSS to your own CSS. This is most
+  // useful if for example your template is not based off a document with 0 as body margin.
+  baseCss: '\n    * {\n      box-sizing: border-box;\n    }\n    html, body, #wrapper {\n      min-height: 100%;\n    }\n    body {\n      margin: 0;\n      height: 100%;\n      background-color: #fff\n    }\n    #wrapper {\n      overflow: auto;\n      overflow-x: hidden;\n    }\n    \n    * ::-webkit-scrollbar-track {\n      background: rgba(0, 0, 0, 0.1)\n    }\n\n    * ::-webkit-scrollbar-thumb {\n      background: rgba(255, 255, 255, 0.2)\n    }\n\n    * ::-webkit-scrollbar {\n      width: 10px\n    }\n  ',
+
   // CSS that could only be seen (for instance, inside the code viewer)
   protectedCss: '* { box-sizing: border-box; } body {margin: 0;}',
 
@@ -36631,7 +36637,7 @@ var RichTextEditor = function () {
         btn.className = btn.className.replace(active, '').trim();
 
         // doc.queryCommandValue(name) != 'false'
-        if (doc.queryCommandState(name)) {
+        if (doc.queryCommandSupported(name) && doc.queryCommandState(name)) {
           btn.className += ' ' + active;
         }
 
@@ -44779,15 +44785,15 @@ var Droppable = function () {
         }
       } else if (dragContent) {
         content = dragContent;
-      } else if (types.indexOf('text/html') >= 0) {
+      } else if ((0, _underscore.indexOf)(types, 'text/html') >= 0) {
         content = dataTransfer.getData('text/html').replace(/<\/?meta[^>]*>/g, '');
-      } else if (types.indexOf('text/uri-list') >= 0) {
+      } else if ((0, _underscore.indexOf)(types, 'text/uri-list') >= 0) {
         content = {
           type: 'link',
           attributes: { href: content },
           content: content
         };
-      } else if (types.indexOf('text/json') >= 0) {
+      } else if ((0, _underscore.indexOf)(types, 'text/json') >= 0) {
         var json = dataTransfer.getData('text/json');
         json && (content = JSON.parse(json));
       }
@@ -44994,7 +45000,7 @@ module.exports = Backbone.View.extend({
 
       var colorWarn = '#ffca6f';
 
-      var baseCss = '\n        * {\n          box-sizing: border-box;\n        }\n        html, body, #wrapper {\n          min-height: 100%;\n        }\n        body {\n          margin: 0;\n          height: 100%;\n          background-color: #fff\n        }\n        #wrapper {\n          overflow: auto;\n          overflow-x: hidden;\n        }\n      ';
+      // I need all this styles to make the editor work properly
       // Remove `html { height: 100%;}` from the baseCss as it gives jumpings
       // effects (on ENTER) with RTE like CKEditor (maybe some bug there?!?)
       // With `body {height: auto;}` jumps in CKEditor are removed but in
@@ -45002,9 +45008,7 @@ module.exports = Backbone.View.extend({
       // `body {height: 100%;}`.
       // For the moment I give the priority to Firefox as it might be
       // CKEditor's issue
-
-      // I need all this styles to make the editor work properly
-      var frameCss = '\n        ' + baseCss + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 50px;\n          width: 50px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        * ::-webkit-scrollbar-track {\n          background: rgba(0, 0, 0, 0.1)\n        }\n\n        * ::-webkit-scrollbar-thumb {\n          background: rgba(255, 255, 255, 0.2)\n        }\n\n        * ::-webkit-scrollbar {\n          width: 10px\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (protCss || '') + '\n      ';
+      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 50px;\n          width: 50px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (protCss || '') + '\n      ';
 
       if (externalStyles) {
         body.append(externalStyles);
@@ -45027,7 +45031,13 @@ module.exports = Backbone.View.extend({
       // property keymaster (and many others) still use it... using `defineProperty`
       // hack seems the only way
       var createCustomEvent = function createCustomEvent(e, cls) {
-        var oEvent = new window[cls](e.type, e);
+        var oEvent = void 0;
+        try {
+          oEvent = new window[cls](e.type, e);
+        } catch (e) {
+          oEvent = document.createEvent(cls);
+          oEvent.initEvent(e.type, true, true);
+        }
         oEvent.keyCodeVal = e.keyCode;
         ['keyCode', 'which'].forEach(function (prop) {
           Object.defineProperty(oEvent, prop, {
@@ -45398,7 +45408,7 @@ module.exports = function () {
           var event = opts && opts.event;
           var sel = ed.getSelected();
           var toolbarStyle = ed.Canvas.getToolbarEl().style;
-          var nativeDrag = event.type == 'dragstart';
+          var nativeDrag = event && event.type == 'dragstart';
 
           var hideTlb = function hideTlb() {
             toolbarStyle.display = 'none';
@@ -47153,16 +47163,13 @@ module.exports = function () {
 "use strict";
 
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-module.exports = _defineProperty({
+module.exports = {
   // Specify the element to use as a container, string (query) or HTMLElement
   // With the empty value, nothing will be rendered
   appendTo: '',
 
   blocks: []
-
-}, 'appendTo', '');
+};
 
 /***/ }),
 /* 211 */
@@ -47471,7 +47478,8 @@ module.exports = Backbone.View.extend({
 
     // Note: data are not available on dragenter for security reason,
     // but will use dragContent as I need it for the Sorter context
-    ev.dataTransfer.setData(type, data);
+    // IE11 supports only 'text' data type
+    ev.dataTransfer.setData('text', data);
     this.em.set('dragContent', content);
   },
   handleDragEnd: function handleDragEnd() {

@@ -40,7 +40,12 @@ module.exports = () => ({
         case 'height':
         case 'max-height':
         case 'min-height':
-          obj.fixedValues = ['initial', 'inherit', 'auto'];
+          obj.fixedValues = [
+            'initial',
+            'inherit',
+            'auto',
+            'calc([0-9%-+pxvhw]+)'
+          ];
           break;
         case 'font-size':
           obj.fixedValues = [

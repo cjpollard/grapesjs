@@ -405,7 +405,7 @@ module.exports = {
           type: 'integer',
           units: ['px', '%', 'vh'],
           defaults: 'auto',
-          fixedValues: ['initial', 'inherit', 'auto'],
+          fixedValues: ['initial', 'inherit', 'auto', 'calc([0-9%-+pxvhw]+)'],
           min: 0
         };
         res.property = 'height';
@@ -421,7 +421,7 @@ module.exports = {
           type: 'integer',
           units: ['px', '%', 'vw'],
           defaults: 'auto',
-          fixedValues: ['initial', 'inherit', 'auto'],
+          fixedValues: ['initial', 'inherit', 'auto', 'calc([0-9%-+pxvhw]+)'],
           min: 0
         };
         res.property = 'width';
@@ -438,28 +438,48 @@ module.exports = {
           type: 'composite',
           properties: [
             {
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               property: 'margin-top',
               type: 'integer',
               units: ['px', '%', 'vh'],
               defaults: 0
             },
             {
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               property: 'margin-right',
               type: 'integer',
               units: ['px', '%', 'vw'],
               defaults: 0
             },
             {
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               property: 'margin-bottom',
               type: 'integer',
               units: ['px', '%', 'vh'],
               defaults: 0
             },
             {
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               property: 'margin-left',
               type: 'integer',
               units: ['px', '%', 'vw'],
@@ -477,7 +497,12 @@ module.exports = {
           properties: [
             {
               property: 'padding-top',
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               type: 'integer',
               units: ['px', '%', 'vh'],
               defaults: 0,
@@ -485,7 +510,12 @@ module.exports = {
             },
             {
               property: 'padding-right',
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               type: 'integer',
               units: ['px', '%', 'vw'],
               defaults: 0,
@@ -493,7 +523,12 @@ module.exports = {
             },
             {
               property: 'padding-bottom',
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               type: 'integer',
               units: ['px', '%', 'vh'],
               defaults: 0,
@@ -501,7 +536,12 @@ module.exports = {
             },
             {
               property: 'padding-left',
-              fixedValues: ['initial', 'inherit', 'auto'],
+              fixedValues: [
+                'initial',
+                'inherit',
+                'auto',
+                'calc([0-9%-+pxvhw]+)'
+              ],
               type: 'integer',
               units: ['px', '%', 'vw'],
               defaults: 0,

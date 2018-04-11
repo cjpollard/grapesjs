@@ -3853,7 +3853,8 @@ module.exports = Backbone.View.extend({
 
     if (em && em.get('avoidInlineStyle')) {
       this.el.id = model.getId();
-      model.setStyle(model.getStyle());
+      var style = model.getStyle();
+      !(0, _underscore.isEmpty)(style) && model.setStyle(style);
     } else {
       this.setAttribute('style', model.styleToString());
     }
@@ -4246,8 +4247,12 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     this.initComponents();
     this.initToolbar();
     this.set('status', '');
-    this.listenTo(this.get('classes'), 'add remove change', function () {
-      return _this.emitUpdate('classes');
+
+    // Register global updates for collection properties
+    ['classes', 'traits'].forEach(function (name) {
+      return _this.listenTo(_this.get(name), 'add remove change', function () {
+        return _this.emitUpdate(name);
+      });
     });
     this.init();
   },
@@ -4817,11 +4822,9 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     }
 
     var obj = Backbone.Model.prototype.toJSON.apply(this, args);
-    var scriptStr = this.getScriptString();
     obj.attributes = this.getAttributes();
     delete obj.attributes.class;
     delete obj.toolbar;
-    scriptStr && (obj.script = scriptStr);
 
     return obj;
   },
@@ -5047,7 +5050,11 @@ module.exports = Backbone.View.extend({
    * @return {HTMLElement}
    */
   getClearEl: function getClearEl() {
-    return this.el.querySelector('[' + clearProp + ']');
+    if (!this.clearEl) {
+      this.clearEl = this.el.querySelector('[' + clearProp + ']');
+    }
+
+    return this.clearEl;
   },
 
 
@@ -17584,13 +17591,7 @@ module.exports = {
     if (key == 8 || key == 46) {
       if (!focused) e.preventDefault();
       if (comp && !focused) {
-        if (!comp.get('removable')) return;
-        comp.set('status', '');
-        comp.destroy();
-        this.hideBadge();
-        this.clean();
-        this.hideHighlighter();
-        this.editorModel.set('selectedComponent', null);
+        this.editor.runCommand('core:component-delete');
       }
     }
   },
@@ -24104,14 +24105,13 @@ module.exports = function (config) {
      * @example
      * editor.runCommand('myCommand', {someValue: 1});
      */
-    runCommand: function runCommand(id, options) {
-      var result;
-      var command = em.get('Commands').get(id);
+    runCommand: function runCommand(id) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      if (command) {
-        result = command.run(this, this, options);
-        this.trigger('run:' + id);
-      }
+      var result = void 0;
+      var command = em.get('Commands').get(id);
+      if (command) result = command.callRun(this, options);
+
       return result;
     },
 
@@ -24124,14 +24124,13 @@ module.exports = function (config) {
      * @example
      * editor.stopCommand('myCommand', {someValue: 1});
      */
-    stopCommand: function stopCommand(id, options) {
-      var result;
-      var command = em.get('Commands').get(id);
+    stopCommand: function stopCommand(id) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      if (command) {
-        result = command.stop(this, this, options);
-        this.trigger('stop:' + id);
-      }
+      var result = void 0;
+      var command = em.get('Commands').get(id);
+      if (command) result = command.callStop(this, options);
+
       return result;
     },
 
@@ -24347,6 +24346,9 @@ module.exports = function (config) {
     * ## Commands
     * * `run:{commandName}` - Triggered when some command is called to run (eg. editor.runCommand('preview'))
     * * `stop:{commandName}` - Triggered when some command is called to stop (eg. editor.stopCommand('preview'))
+    * * `run:{commandName}:before` - Triggered before the command is called
+    * * `stop:{commandName}:before` - Triggered before the command is called to stop
+    * * `abort:{commandName}` - Triggered when the command execution is aborted (`editor.on(`run:preview:before`, opts => opts.abort = 1);`)
     * ## General
     * * `canvasScroll` - Triggered when the canvas is scrolle
     * * `undo` - Undo executed
@@ -24633,6 +24635,7 @@ module.exports = Backbone.Model.extend({
     this.set('Config', c);
     this.set('modules', []);
     this.set('toLoad', []);
+    this.set('storables', []);
 
     if (c.el && c.fromElement) this.config.components = c.el.innerHTML;
 
@@ -24684,7 +24687,7 @@ module.exports = Backbone.Model.extend({
       clb && clb();
     };
 
-    if (sm && sm.getConfig().autoload) {
+    if (sm && sm.canAutoload()) {
       this.load(postLoad);
     } else {
       postLoad();
@@ -25019,7 +25022,9 @@ module.exports = Backbone.Model.extend({
     sm.load(load, function (res) {
       _this6.cacheLoad = res;
       clb && clb(res);
-      _this6.trigger('storage:load', res);
+      setTimeout(function () {
+        return _this6.trigger('storage:load', res);
+      }, 0);
     });
   },
 
@@ -30368,6 +30373,15 @@ module.exports = function () {
 
 
     /**
+     * Get configuration object
+     * @return {Object}
+     * */
+    getConfig: function getConfig() {
+      return c;
+    },
+
+
+    /**
      * Checks if autosave is enabled
      * @return {Boolean}
      * */
@@ -30545,12 +30559,22 @@ module.exports = function () {
 
 
     /**
-     * Get configuration object
-     * @return {Object}
+     * Get current storage
+     * @return {Storage}
+     * */
+    getCurrentStorage: function getCurrentStorage() {
+      return this.get(this.getCurrent());
+    },
+
+
+    /**
+     * Check if autoload is possible
+     * @return {Boolean}
      * @private
      * */
-    getConfig: function getConfig() {
-      return c;
+    canAutoload: function canAutoload() {
+      var storage = this.getCurrentStorage();
+      return storage && this.getConfig().autoload;
     }
   };
 };
@@ -39834,7 +39858,7 @@ module.exports = function () {
           case 'height':
           case 'max-height':
           case 'min-height':
-            obj.fixedValues = ['initial', 'inherit', 'auto', 'calc\([0-9%\-\+pxvhw]+\)'];
+            obj.fixedValues = ['initial', 'inherit', 'auto', 'calc\\([0-9%\\-\\+pxvhw]+\\)'];
             break;
           case 'font-size':
             obj.fixedValues = ['medium', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large', 'smaller', 'larger', 'length', 'initial', 'inherit'];
@@ -41294,25 +41318,26 @@ module.exports = Backbone.View.extend({
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /**
+                                                                                                                                                                                                                                                                   * This module contains and manage CSS rules for the template inside the canvas
+                                                                                                                                                                                                                                                                   * Before using the methods you should get first the module from the editor instance, in this way:
+                                                                                                                                                                                                                                                                   *
+                                                                                                                                                                                                                                                                   * ```js
+                                                                                                                                                                                                                                                                   * var cssComposer = editor.CssComposer;
+                                                                                                                                                                                                                                                                   * ```
+                                                                                                                                                                                                                                                                   *
+                                                                                                                                                                                                                                                                   * @module CssComposer
+                                                                                                                                                                                                                                                                   * @param {Object} config Configurations
+                                                                                                                                                                                                                                                                   * @param {string|Array<Object>} [config.rules=[]] CSS string or an array of rule objects
+                                                                                                                                                                                                                                                                   * @example
+                                                                                                                                                                                                                                                                   * ...
+                                                                                                                                                                                                                                                                   * CssComposer: {
+                                                                                                                                                                                                                                                                   *    rules: '.myClass{ color: red}',
+                                                                                                                                                                                                                                                                   * }
+                                                                                                                                                                                                                                                                   */
 
-/**
- * This module contains and manage CSS rules for the template inside the canvas
- * Before using the methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var cssComposer = editor.CssComposer;
- * ```
- *
- * @module CssComposer
- * @param {Object} config Configurations
- * @param {string|Array<Object>} [config.rules=[]] CSS string or an array of rule objects
- * @example
- * ...
- * CssComposer: {
- *    rules: '.myClass{ color: red}',
- * }
- */
+
+var _underscore = __webpack_require__(1);
 
 module.exports = function () {
   var em = void 0;
@@ -41442,7 +41467,9 @@ module.exports = function () {
         obj = c.em.get('Parser').parseCss(d.css);
       }
 
-      if (obj) {
+      if ((0, _underscore.isArray)(obj)) {
+        obj.length && rules.reset(obj);
+      } else if (obj) {
         rules.reset(obj);
       }
 
@@ -41483,10 +41510,12 @@ module.exports = function () {
      *   color: '#fff',
      * });
      * */
-    add: function add(selectors, state, width, opts) {
+    add: function add(selectors, state, width) {
+      var opts = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+
       var s = state || '';
       var w = width || '';
-      var opt = opts || {};
+      var opt = _extends({}, opts);
       var rule = this.get(selectors, s, w, opt);
       if (rule) return rule;else {
         opt.state = s;
@@ -41758,10 +41787,11 @@ module.exports = Backbone.Collection.extend({
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(Backbone) {
 
 var CssRuleView = __webpack_require__(48);
 var CssGroupRuleView = __webpack_require__(141);
+var $ = Backbone.$;
 
 module.exports = __webpack_require__(0).View.extend({
   initialize: function initialize(o) {
@@ -41805,7 +41835,7 @@ module.exports = __webpack_require__(0).View.extend({
     // I have to render keyframes of the same name together
     // Unfortunately at the moment I didn't find the way of appending them
     // if not staticly, via appendData
-    if (model.get('atRuleType') == 'keyframes') {
+    if (model.get('atRuleType') === 'keyframes') {
       var atRule = model.getAtRule();
       var atRuleEl = this.atRules[atRule];
 
@@ -41826,11 +41856,22 @@ module.exports = __webpack_require__(0).View.extend({
       rendered = view.render().el;
     }
 
+    var mediaWidth = this.getMediaWidth(model.get('mediaText'));
+    var styleBlockId = '#' + this.pfx + 'rules-' + mediaWidth;
+
     if (rendered) {
-      if (fragment) fragment.appendChild(rendered);else this.$el.append(rendered);
+      if (fragment) {
+        fragment.querySelector(styleBlockId).appendChild(rendered);
+      } else {
+        var $stylesContainer = this.$el.find(styleBlockId);
+        $stylesContainer.append(rendered);
+      }
     }
 
     return rendered;
+  },
+  getMediaWidth: function getMediaWidth(mediaText) {
+    return mediaText && mediaText.replace('(' + this.em.getConfig('mediaCondition') + ': ', '').replace(')', '');
   },
   render: function render() {
     var _this = this;
@@ -41839,6 +41880,18 @@ module.exports = __webpack_require__(0).View.extend({
     var $el = this.$el;
     var frag = document.createDocumentFragment();
     $el.empty();
+
+    // Create devices related DOM structure
+    var pfx = this.pfx;
+    this.em.get('DeviceManager').getAll().map(function (model) {
+      return model.get('widthMedia');
+    }).sort(function (left, right) {
+      return (right && right.replace('px', '') || Number.MAX_VALUE) - (left && left.replace('px', '') || Number.MAX_VALUE);
+    }).forEach(function (widthMedia) {
+      var blockId = pfx + 'rules-' + widthMedia;
+      $('<div id="' + blockId + '"></div>').appendTo(frag);
+    });
+
     this.collection.each(function (model) {
       return _this.addToCollection(model, frag);
     });
@@ -41847,6 +41900,7 @@ module.exports = __webpack_require__(0).View.extend({
     return this;
   }
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 141 */
@@ -42030,7 +42084,8 @@ module.exports = DomainViews.extend({
     this.pfx = config.stylePrefix || '';
     this.ppfx = config.pStylePrefix || '';
     this.className = this.pfx + 'traits';
-    this.listenTo(this.em, 'change:selectedComponent', this.updatedCollection);
+    var toListen = 'component:selected component:update:traits';
+    this.listenTo(this.em, toListen, this.updatedCollection);
     this.updatedCollection();
   },
 
@@ -42041,8 +42096,9 @@ module.exports = DomainViews.extend({
    */
   updatedCollection: function updatedCollection() {
     var ppfx = this.ppfx;
+    var comp = this.em.getSelected();
     this.el.className = this.className + ' ' + ppfx + 'one-bg ' + ppfx + 'two-color';
-    var comp = this.em.get('selectedComponent');
+
     if (comp) {
       this.collection = comp.get('traits');
       this.render();
@@ -42870,6 +42926,14 @@ module.exports = Backbone.Collection.extend({
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     this.em = options.em || '';
+    this.listenTo(this, 'add', this.handleAdd);
+  },
+  handleAdd: function handleAdd(model) {
+    var target = this.target;
+
+    if (target) {
+      model.target = target;
+    }
   },
   setTarget: function setTarget(target) {
     this.target = target;
@@ -43750,7 +43814,7 @@ module.exports = Component.extend({
       name: 'color',
       placeholder: 'eg. FF0000',
       changeProp: 1
-    }, this.getAutoplayTrait(), this.getLoopTrait(), this.getControlsTrait()];
+    }, this.getAutoplayTrait(), this.getLoopTrait()];
   },
 
 
@@ -43805,11 +43869,14 @@ module.exports = Component.extend({
    * @private
    */
   getYoutubeSrc: function getYoutubeSrc() {
+    var id = this.get('videoId');
     var url = this.get('ytUrl');
-    url += this.get('videoId') + '?';
+    url += id + '?';
     url += this.get('autoplay') ? '&autoplay=1' : '';
-    url += !this.get('controls') ? '&controls=0' : '';
-    url += this.get('loop') ? '&loop=1' : '';
+    url += !this.get('controls') ? '&controls=0&showinfo=0' : '';
+    // Loop works only with playlist enabled
+    // https://stackoverflow.com/questions/25779966/youtube-iframe-loop-doesnt-work
+    url += this.get('loop') ? '&loop=1&playlist=' + id : '';
     return url;
   },
 
@@ -45164,7 +45231,7 @@ module.exports = Backbone.View.extend({
   updateScript: function updateScript(view) {
     if (!view.scriptContainer) {
       view.scriptContainer = $('<div>');
-      this.getJsContainer().append(view.scriptContainer.get(0));
+      this.getJsContainer().appendChild(view.scriptContainer.get(0));
     }
 
     var model = view.model;
@@ -45316,6 +45383,7 @@ module.exports = function () {
     }
 
     delete obj.initialize;
+    obj.id = id;
     commands[id] = AbsCommands.extend(obj);
     return this;
   };
@@ -45372,15 +45440,7 @@ module.exports = function () {
 
       defaultCommands['tlb-delete'] = {
         run: function run(ed) {
-          var sel = ed.getSelected();
-
-          if (!sel || !sel.get('removable')) {
-            console.warn('The element is not removable');
-            return;
-          }
-
-          ed.select(null);
-          sel.destroy();
+          return ed.runCommand('core:component-delete');
         }
       };
 
@@ -45500,6 +45560,20 @@ module.exports = function () {
           var at = coll.indexOf(model) + 1;
           coll.add(clp.clone(), { at: at });
         }
+      };
+      defaultCommands['core:component-delete'] = function (ed, sender) {
+        var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+        var component = opts.component || ed.getSelected();
+
+        if (!component || !component.get('removable')) {
+          console.warn('The element is not removable');
+          return;
+        }
+
+        ed.select(null);
+        component.destroy();
+        return component;
       };
 
       if (c.em) c.model = c.em.get('Canvas');
@@ -45749,6 +45823,44 @@ module.exports = Backbone.View.extend({
    * @private
    * */
   init: function init(o) {},
+
+
+  /**
+   * Method that run command
+   * @param  {Object}  editor Editor instance
+   * @param  {Object}  [options={}] Options
+   * @private
+   * */
+  callRun: function callRun(editor) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    var id = this.id;
+    editor.trigger('run:' + id + ':before', options);
+
+    if (options && options.abort) {
+      editor.trigger('abort:' + id, options);
+      return;
+    }
+
+    var result = this.run(editor, editor, options);
+    editor.trigger('run:' + id, result, options);
+  },
+
+
+  /**
+   * Method that run command
+   * @param  {Object}  editor Editor instance
+   * @param  {Object}  [options={}] Options
+   * @private
+   * */
+  callStop: function callStop(editor) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    var id = this.id;
+    editor.trigger('stop:' + id + ':before', options);
+    var result = this.stop(editor, editor, options);
+    editor.trigger('stop:' + id, result, options);
+  },
 
 
   /**
@@ -47806,7 +47918,29 @@ module.exports = function (_ref) {
       return this;
     };
 
-    fn.remove = function () {
+    // For SVGs in IE
+    fn.removeClass = function (c) {
+      if (!arguments.length) {
+        return this.attr('class', '');
+      }
+      var classes = (0, _underscore.isString)(c) && c.match(/\S+/g);
+      return classes ? this.each(function (el) {
+        (0, _underscore.each)(classes, function (c) {
+          if (el.classList) {
+            el.classList.remove(c);
+          } else {
+            var val = el.className;
+            var bval = el.className.baseVal;
+
+            if (!(0, _underscore.isUndefined)(bval)) {
+              val.baseVal = bval.replace(c, '');
+            } else {
+              el.className = val.replace(c, '');
+            }
+          }
+        });
+      }) : this;
+    }, fn.remove = function () {
       return this.each(function (node) {
         return node.parentNode && node.parentNode.removeChild(node);
       });

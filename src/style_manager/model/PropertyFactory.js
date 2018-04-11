@@ -371,8 +371,6 @@ module.exports = () => ({
       // Detached
       switch (prop) {
         case 'background':
-        case 'margin':
-        case 'padding':
           obj.detached = true;
           break;
       }

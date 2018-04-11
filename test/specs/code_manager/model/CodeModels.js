@@ -71,12 +71,9 @@ module.exports = {
     });
 
     describe('CssGenerator', () => {
-      let newCssComp;
-
+      var newCssComp = () => new CssComposer().init();
       beforeEach(() => {
         em = new Editor({});
-        newCssComp = () => new CssComposer().init({ em });
-
         cc = em.get('CssComposer');
         obj = new CssGenerator();
         dcomp = new DomComponents();

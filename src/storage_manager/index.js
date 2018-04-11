@@ -55,14 +55,6 @@ module.exports = () => {
     },
 
     /**
-     * Get configuration object
-     * @return {Object}
-     * */
-    getConfig() {
-      return c;
-    },
-
-    /**
      * Checks if autosave is enabled
      * @return {Boolean}
      * */
@@ -228,21 +220,12 @@ module.exports = () => {
     },
 
     /**
-     * Get current storage
-     * @return {Storage}
-     * */
-    getCurrentStorage() {
-      return this.get(this.getCurrent());
-    },
-
-    /**
-     * Check if autoload is possible
-     * @return {Boolean}
+     * Get configuration object
+     * @return {Object}
      * @private
      * */
-    canAutoload() {
-      const storage = this.getCurrentStorage();
-      return storage && this.getConfig().autoload;
+    getConfig() {
+      return c;
     }
   };
 };

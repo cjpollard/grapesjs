@@ -8,15 +8,6 @@ module.exports = Backbone.Collection.extend({
 
   initialize(coll, options = {}) {
     this.em = options.em || '';
-    this.listenTo(this, 'add', this.handleAdd);
-  },
-
-  handleAdd(model) {
-    const target = this.target;
-
-    if (target) {
-      model.target = target;
-    }
   },
 
   setTarget(target) {

@@ -1,4 +1,4 @@
-import { isArray, isEmpty } from 'underscore';
+import { isArray } from 'underscore';
 
 const ComponentsView = require('./ComponentsView');
 
@@ -151,8 +151,7 @@ module.exports = Backbone.View.extend({
 
     if (em && em.get('avoidInlineStyle')) {
       this.el.id = model.getId();
-      const style = model.getStyle();
-      !isEmpty(style) && model.setStyle(style);
+      model.setStyle(model.getStyle());
     } else {
       this.setAttribute('style', model.styleToString());
     }

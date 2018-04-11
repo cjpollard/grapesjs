@@ -186,12 +186,8 @@ const Component = Backbone.Model.extend(Styleable).extend(
       this.initComponents();
       this.initToolbar();
       this.set('status', '');
-
-      // Register global updates for collection properties
-      ['classes', 'traits'].forEach(name =>
-        this.listenTo(this.get(name), 'add remove change', () =>
-          this.emitUpdate(name)
-        )
+      this.listenTo(this.get('classes'), 'add remove change', () =>
+        this.emitUpdate('classes')
       );
       this.init();
     },
@@ -718,9 +714,11 @@ const Component = Backbone.Model.extend(Styleable).extend(
      */
     toJSON(...args) {
       const obj = Backbone.Model.prototype.toJSON.apply(this, args);
+      const scriptStr = this.getScriptString();
       obj.attributes = this.getAttributes();
       delete obj.attributes.class;
       delete obj.toolbar;
+      scriptStr && (obj.script = scriptStr);
 
       return obj;
     },

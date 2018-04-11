@@ -70,7 +70,13 @@ module.exports = {
     if (key == 8 || key == 46) {
       if (!focused) e.preventDefault();
       if (comp && !focused) {
-        this.editor.runCommand('core:component-delete');
+        if (!comp.get('removable')) return;
+        comp.set('status', '');
+        comp.destroy();
+        this.hideBadge();
+        this.clean();
+        this.hideHighlighter();
+        this.editorModel.set('selectedComponent', null);
       }
     }
   },

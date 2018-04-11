@@ -55,7 +55,6 @@ module.exports = () => {
     }
 
     delete obj.initialize;
-    obj.id = id;
     commands[id] = AbsCommands.extend(obj);
     return this;
   };
@@ -112,7 +111,15 @@ module.exports = () => {
 
       defaultCommands['tlb-delete'] = {
         run(ed) {
-          return ed.runCommand('core:component-delete');
+          var sel = ed.getSelected();
+
+          if (!sel || !sel.get('removable')) {
+            console.warn('The element is not removable');
+            return;
+          }
+
+          ed.select(null);
+          sel.destroy();
         }
       };
 
@@ -226,18 +233,6 @@ module.exports = () => {
           const at = coll.indexOf(model) + 1;
           coll.add(clp.clone(), { at });
         }
-      };
-      defaultCommands['core:component-delete'] = (ed, sender, opts = {}) => {
-        let component = opts.component || ed.getSelected();
-
-        if (!component || !component.get('removable')) {
-          console.warn('The element is not removable');
-          return;
-        }
-
-        ed.select(null);
-        component.destroy();
-        return component;
       };
 
       if (c.em) c.model = c.em.get('Canvas');

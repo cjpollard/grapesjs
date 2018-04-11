@@ -58,9 +58,6 @@
  * ## Commands
  * * `run:{commandName}` - Triggered when some command is called to run (eg. editor.runCommand('preview'))
  * * `stop:{commandName}` - Triggered when some command is called to stop (eg. editor.stopCommand('preview'))
- * * `run:{commandName}:before` - Triggered before the command is called
- * * `stop:{commandName}:before` - Triggered before the command is called to stop
- * * `abort:{commandName}` - Triggered when the command execution is aborted (`editor.on(`run:preview:before`, opts => opts.abort = 1);`)
  * ## General
  * * `canvasScroll` - Triggered when the canvas is scrolle
  * * `undo` - Undo executed
@@ -429,11 +426,14 @@ module.exports = config => {
      * @example
      * editor.runCommand('myCommand', {someValue: 1});
      */
-    runCommand(id, options = {}) {
-      let result;
-      const command = em.get('Commands').get(id);
-      if (command) result = command.callRun(this, options);
+    runCommand(id, options) {
+      var result;
+      var command = em.get('Commands').get(id);
 
+      if (command) {
+        result = command.run(this, this, options);
+        this.trigger('run:' + id);
+      }
       return result;
     },
 
@@ -445,11 +445,14 @@ module.exports = config => {
      * @example
      * editor.stopCommand('myCommand', {someValue: 1});
      */
-    stopCommand(id, options = {}) {
-      let result;
-      const command = em.get('Commands').get(id);
-      if (command) result = command.callStop(this, options);
+    stopCommand(id, options) {
+      var result;
+      var command = em.get('Commands').get(id);
 
+      if (command) {
+        result = command.stop(this, this, options);
+        this.trigger('stop:' + id);
+      }
       return result;
     },
 

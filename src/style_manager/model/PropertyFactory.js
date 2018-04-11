@@ -44,7 +44,7 @@ module.exports = () => ({
             'initial',
             'inherit',
             'auto',
-            'calc([0-9%-+pxvhw]+)'
+            'calc\\([0-9%\\-\\+pxvhw]+\\)'
           ];
           break;
         case 'font-size':
@@ -371,6 +371,8 @@ module.exports = () => ({
       // Detached
       switch (prop) {
         case 'background':
+        case 'margin':
+        case 'padding':
           obj.detached = true;
           break;
       }

@@ -129,7 +129,7 @@ describe('DOM Components', () => {
       <style>
         #${id} { background-color: red }
       </style>`);
-      expect(em.getHtml()).toEqual(`<div id="${id}">Text</div>`);
+      expect(em.getHtml()).toEqual(`<div id="${id}" class="text">Text</div>`);
       expect(obj.getComponents().length).toEqual(1);
       obj
         .getComponents()

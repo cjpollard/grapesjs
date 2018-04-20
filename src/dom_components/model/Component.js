@@ -416,7 +416,11 @@ const Component = Backbone.Model.extend(Styleable).extend(
     },
 
     initClasses() {
-      const classes = this.normalizeClasses(this.get('classes') || []);
+      const addTypeToClasses =
+        this.get('type') !== '' ? [this.get('type')] : [];
+      const classes = this.normalizeClasses(
+        this.get('classes') || addTypeToClasses
+      );
       this.set('classes', new Selectors(classes));
       return this;
     },

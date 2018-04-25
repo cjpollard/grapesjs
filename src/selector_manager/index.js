@@ -74,6 +74,15 @@ module.exports = config => {
      */
     name: 'SelectorManager',
 
+    /**
+     * Get configuration object
+     * @return {Object}
+     * @private
+     */
+    getConfig() {
+      return c;
+    },
+
     getConfig() {
       return c;
     },

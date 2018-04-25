@@ -40,11 +40,9 @@ describe('GrapesJS', () => {
         }
       };
       obj = grapesjs;
-      //fixture = $('<div id="' + editorName + '"></div>');
-      //fixture.empty().appendTo(fixtures);
-
       document.body.innerHTML = `<div id="fixtures"><div id="${editorName}"></div></div>`;
       fixtures = document.body.querySelector('#fixtures');
+      fixture = document.body.querySelector(`#${editorName}`);
     });
 
     it('Main object should be loaded', () => {
@@ -153,6 +151,27 @@ describe('GrapesJS', () => {
       expect(css ? css : '').toEqual(protCss + '.test2{color:red;}');
       // bust is still here
       expect(editor.getStyle().length).toEqual(2);
+    });
+
+    it('Init editor from element with multiple font-face at-rules', () => {
+      config.fromElement = 1;
+      config.storageManager = { type: 0 };
+      fixture.innerHTML =
+        `
+      <style>
+        @font-face {
+          font-family: 'Glyphicons Halflings';
+          src: url(https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/fonts/glyphicons-halflings-regular.woff2) format('woff2');
+        }
+        @font-face {
+          font-family: 'Droid Sans';
+          src: url(https://fonts.gstatic.com/s/droidsans/v8/SlGVmQWMvZQIdix7AFxXkHNSbRYXags.woff2) format('woff2');
+        }
+      </style>` + htmlString;
+      const editor = obj.init(config);
+      const css = editor.getCss();
+      const styles = editor.getStyle();
+      expect(styles.length).toEqual(2);
     });
 
     it('Set components as HTML', () => {
@@ -287,6 +306,28 @@ describe('GrapesJS', () => {
 
       editor = obj.init(config);
       expect(editor.Commands.get('export-template').test).toEqual(1);
+    });
+
+    it('Dump unused css classes/selectors', () => {
+      config.fromElement = 1;
+      config.storageManager = { type: 0 };
+      fixture.innerHTML = documentEl;
+      const editor = obj.init(config);
+      const css = editor.getCss({ dumpUnusedStyles: 1 });
+      const protCss = editor.getConfig().protectedCss;
+      expect(editor.getStyle().length).toEqual(2);
+      expect(css).toEqual(`${protCss}.test2{color:red;}.test3{color:blue;}`);
+    });
+
+    it('Dump unused css classes/selectors using the init option', () => {
+      config.fromElement = 1;
+      config.storageManager = { type: 0 };
+      fixture.innerHTML = documentEl;
+      const editor = obj.init({ ...config, dumpUnusedStyles: 1 });
+      const css = editor.getCss();
+      const protCss = editor.getConfig().protectedCss;
+      expect(editor.getStyle().length).toEqual(2);
+      expect(css).toEqual(`${protCss}.test2{color:red;}.test3{color:blue;}`);
     });
   });
 });

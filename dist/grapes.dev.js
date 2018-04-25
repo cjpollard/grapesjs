@@ -41359,13 +41359,7 @@ module.exports = function () {
       var w = width || '';
       var opt = opts || {};
       var rule = this.get(selectors, s, w, opt);
-
-      // do not create rules that were found before
-      // unless this is an at-rule, for which multiple declarations
-      // make sense (e.g. multiple `@font-type`s)
-      if (rule && rule.config && !rule.config.atRuleType) {
-        return rule;
-      } else {
+      if (rule) return rule;else {
         opt.state = s;
         opt.mediaText = w;
         opt.selectors = '';

@@ -26,6 +26,10 @@ module.exports = require('backbone').View.extend({
     const level = this.level + 1;
     const gut = `${30 + level * 10}px`;
     const name = model.getName();
+    const modelClasses = model
+      .getClasses()
+      .toString()
+      .replace(/,/g, '.');
     return `
       ${
         hidable
@@ -41,6 +45,7 @@ module.exports = require('backbone').View.extend({
             <i class="${clsCaret}" data-toggle-open></i>
             ${model.getIcon()}
             <span class="${clsInput}" data-name>${name}</span>
+            <span>.${modelClasses}</span>
           </div>
         </div>
       </div>

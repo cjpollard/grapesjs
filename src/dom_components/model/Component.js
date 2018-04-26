@@ -642,6 +642,14 @@ const Component = Backbone.Model.extend(Styleable).extend(
       return new this.constructor(attr, opts);
     },
 
+    getClasses() {
+      let classes = [];
+      this.get('classes').each((md, i) => {
+        classes[i] = md.get('name');
+      });
+      return classes;
+    },
+
     /**
      * Get the name of the component
      * @return {string}

@@ -83,10 +83,6 @@ module.exports = config => {
       return c;
     },
 
-    getConfig() {
-      return c;
-    },
-
     /**
      * Initialize module. Automatically called with a new instance of the editor
      * @param {Object} config Configurations

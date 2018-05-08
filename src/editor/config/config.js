@@ -281,6 +281,6 @@ module.exports = {
   // Texts
   textViewCode: 'Code',
 
-  // Dump unused styles within the editor.
-  dumpUnusedStyles: false
+  // Keep unused styles within the editor
+  keepUnusedStyles: 0
 };

@@ -196,13 +196,10 @@ module.exports = Backbone.Model.extend({
    * @param   {Object}   Options
    * @private
    * */
-  componentSelected(model, val, options) {
-    if (!this.get('selectedComponent')) {
-      this.trigger('deselect-comp');
-    } else {
-      this.trigger('select-comp', [model, val, options]);
-      this.trigger('component:selected', arguments);
-    }
+  componentSelected(editor, selected, options) {
+    const prev = this.previous('selectedComponent');
+    prev && this.trigger('component:deselected', prev, options);
+    selected && this.trigger('component:selected', selected, options);
   },
 
   /**
@@ -304,8 +301,9 @@ module.exports = Backbone.Model.extend({
     const config = this.config;
     const wrappesIsBody = config.wrappesIsBody;
     const avoidProt = opts.avoidProtected;
-    const dumpUnusedStyles =
-      opts.dumpUnusedStyles || this.config.dumpUnusedStyles;
+    const keepUnusedStyles = !isUndefined(opts.keepUnusedStyles)
+      ? opts.keepUnusedStyles
+      : config.keepUnusedStyles;
     const cssc = this.get('CssComposer');
     const wrp = this.get('DomComponents').getComponent();
     const protCss = !avoidProt ? config.protectedCss : '';
@@ -315,7 +313,7 @@ module.exports = Backbone.Model.extend({
       this.get('CodeManager').getCode(wrp, 'css', {
         cssc,
         wrappesIsBody,
-        dumpUnusedStyles
+        keepUnusedStyles
       })
     );
   },
@@ -466,6 +464,15 @@ module.exports = Backbone.Model.extend({
     const preview = config.devicePreviewMode;
     const width = device && device.get('widthMedia');
     return device && width && !preview ? `(${condition}: ${width})` : '';
+  },
+
+  /**
+   * Return the count of changes made to the content and not yet stored.
+   * This count resets at any `store()`
+   * @return {number}
+   */
+  getDirtyCount() {
+    return this.get('changesCount');
   },
 
   /**

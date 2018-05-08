@@ -68,7 +68,7 @@ module.exports = require('backbone').Model.extend({
         const mRules = atRules[atRule];
         mRules.forEach(rule => {
           // Special case for multiple font-faces on one page
-          const ruleStr = this.buildFromRule(rule, dump);
+          const ruleStr = this.buildFromRule(rule, dump, opts);
           if (atRule === '@font-face') {
             code += `${atRule}{${ruleStr}}`;
           } else {
@@ -105,7 +105,7 @@ module.exports = require('backbone').Model.extend({
       if (
         this.compCls.indexOf(name) >= 0 ||
         this.ids.indexOf(name) >= 0 ||
-        opts.dumpUnusedStyles
+        opts.keepUnusedStyles
       ) {
         found = 1;
       }

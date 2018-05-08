@@ -67,6 +67,8 @@ module.exports = ComponentView.extend({
     if (editor && this.model.get('editable')) {
       editor.runCommand('open-assets', {
         target: this.model,
+        types: ['image'],
+        accept: 'image/*',
         onSelect() {
           editor.Modal.close();
           editor.AssetManager.setTarget(null);
@@ -78,7 +80,7 @@ module.exports = ComponentView.extend({
   render() {
     this.updateAttributes();
     this.updateClasses();
-    this.$el.attr('style', 'max-width: 100%;');
+
     var actCls = this.$el.attr('class') || '';
     if (!this.model.get('src'))
       this.$el.attr('class', (actCls + ' ' + this.classEmpty).trim());

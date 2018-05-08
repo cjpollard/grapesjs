@@ -4325,6 +4325,20 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
 
 
   /**
+   * Replace a component with another one
+   * @param {String|Component} el Component or HTML string
+   * @return {Array|Component} New added component/s
+   * @private
+   */
+  replaceWith: function replaceWith(el) {
+    var coll = this.collection;
+    var at = coll.indexOf(this);
+    coll.remove(this);
+    return coll.add(el, { at: at });
+  },
+
+
+  /**
    * Emit changes for each updated attribute
    */
   attrUpdated: function attrUpdated() {
@@ -10256,7 +10270,7 @@ function addChangeToHistory(doc, change, selAfter, opId) {
 
   if ((hist.lastOp == opId ||
        hist.lastOrigin == change.origin && change.origin &&
-       ((change.origin.charAt(0) == "+" && doc.cm && hist.lastModTime > time - doc.cm.options.historyEventDelay) ||
+       ((change.origin.charAt(0) == "+" && hist.lastModTime > time - (doc.cm ? doc.cm.options.historyEventDelay : 500)) ||
         change.origin.charAt(0) == "*")) &&
       (cur = lastChangeEvent(hist, hist.lastOp == opId))) {
     // Merge this change into the last event
@@ -10685,7 +10699,8 @@ function makeChangeInner(doc, change) {
 
 // Revert a change stored in a document's history.
 function makeChangeFromHistory(doc, type, allowSelectionOnly) {
-  if (doc.cm && doc.cm.state.suppressEdits && !allowSelectionOnly) { return }
+  var suppress = doc.cm && doc.cm.state.suppressEdits;
+  if (suppress && !allowSelectionOnly) { return }
 
   var hist = doc.history, event, selAfter = doc.sel;
   var source = type == "undo" ? hist.done : hist.undone, dest = type == "undo" ? hist.undone : hist.done;
@@ -10710,8 +10725,10 @@ function makeChangeFromHistory(doc, type, allowSelectionOnly) {
         return
       }
       selAfter = event;
-    }
-    else { break }
+    } else if (suppress) {
+      source.push(event);
+      return
+    } else { break }
   }
 
   // Build up a reverse change object to add to the opposite history
@@ -10867,7 +10884,7 @@ function makeChangeSingleDocInEditor(cm, change, spans) {
 function replaceRange(doc, code, from, to, origin) {
   if (!to) { to = from; }
   if (cmp(to, from) < 0) { var assign;
-    (assign = [to, from], from = assign[0], to = assign[1], assign); }
+    (assign = [to, from], from = assign[0], to = assign[1]); }
   if (typeof code == "string") { code = doc.splitLines(code); }
   makeChange(doc, {from: from, to: to, text: code, origin: origin});
 }
@@ -10963,10 +10980,10 @@ function LeafChunk(lines) {
 }
 
 LeafChunk.prototype = {
-  chunkSize: function chunkSize() { return this.lines.length },
+  chunkSize: function() { return this.lines.length },
 
   // Remove the n lines at offset 'at'.
-  removeInner: function removeInner(at, n) {
+  removeInner: function(at, n) {
     var this$1 = this;
 
     for (var i = at, e = at + n; i < e; ++i) {
@@ -10979,13 +10996,13 @@ LeafChunk.prototype = {
   },
 
   // Helper used to collapse a small branch into a single leaf.
-  collapse: function collapse(lines) {
+  collapse: function(lines) {
     lines.push.apply(lines, this.lines);
   },
 
   // Insert the given array of lines at offset 'at', count them as
   // having the given height.
-  insertInner: function insertInner(at, lines, height) {
+  insertInner: function(at, lines, height) {
     var this$1 = this;
 
     this.height += height;
@@ -10994,7 +11011,7 @@ LeafChunk.prototype = {
   },
 
   // Used to iterate over a part of the tree.
-  iterN: function iterN(at, n, op) {
+  iterN: function(at, n, op) {
     var this$1 = this;
 
     for (var e = at + n; at < e; ++at)
@@ -11018,9 +11035,9 @@ function BranchChunk(children) {
 }
 
 BranchChunk.prototype = {
-  chunkSize: function chunkSize() { return this.size },
+  chunkSize: function() { return this.size },
 
-  removeInner: function removeInner(at, n) {
+  removeInner: function(at, n) {
     var this$1 = this;
 
     this.size -= n;
@@ -11046,13 +11063,13 @@ BranchChunk.prototype = {
     }
   },
 
-  collapse: function collapse(lines) {
+  collapse: function(lines) {
     var this$1 = this;
 
     for (var i = 0; i < this.children.length; ++i) { this$1.children[i].collapse(lines); }
   },
 
-  insertInner: function insertInner(at, lines, height) {
+  insertInner: function(at, lines, height) {
     var this$1 = this;
 
     this.size += lines.length;
@@ -11081,7 +11098,7 @@ BranchChunk.prototype = {
   },
 
   // When a node has grown, check whether it should be split.
-  maybeSpill: function maybeSpill() {
+  maybeSpill: function() {
     if (this.children.length <= 10) { return }
     var me = this;
     do {
@@ -11103,7 +11120,7 @@ BranchChunk.prototype = {
     me.parent.maybeSpill();
   },
 
-  iterN: function iterN(at, n, op) {
+  iterN: function(at, n, op) {
     var this$1 = this;
 
     for (var i = 0; i < this.children.length; ++i) {
@@ -11187,7 +11204,7 @@ function addLineWidget(doc, handle, node, options) {
     }
     return true
   });
-  signalLater(cm, "lineWidgetAdded", cm, widget, typeof handle == "number" ? handle : lineNo(handle));
+  if (cm) { signalLater(cm, "lineWidgetAdded", cm, widget, typeof handle == "number" ? handle : lineNo(handle)); }
   return widget
 }
 
@@ -12781,8 +12798,8 @@ function leftButtonStartDrag(cm, event, pos, behavior) {
   var dragEnd = operation(cm, function (e) {
     if (webkit) { display.scroller.draggable = false; }
     cm.state.draggingText = false;
-    off(document, "mouseup", dragEnd);
-    off(document, "mousemove", mouseMove);
+    off(display.wrapper.ownerDocument, "mouseup", dragEnd);
+    off(display.wrapper.ownerDocument, "mousemove", mouseMove);
     off(display.scroller, "dragstart", dragStart);
     off(display.scroller, "drop", dragEnd);
     if (!moved) {
@@ -12791,7 +12808,7 @@ function leftButtonStartDrag(cm, event, pos, behavior) {
         { extendSelection(cm.doc, pos, null, null, behavior.extend); }
       // Work around unexplainable focus problem in IE9 (#2127) and Chrome (#3081)
       if (webkit || ie && ie_version == 9)
-        { setTimeout(function () {document.body.focus(); display.input.focus();}, 20); }
+        { setTimeout(function () {display.wrapper.ownerDocument.body.focus(); display.input.focus();}, 20); }
       else
         { display.input.focus(); }
     }
@@ -12806,8 +12823,8 @@ function leftButtonStartDrag(cm, event, pos, behavior) {
   dragEnd.copy = !behavior.moveOnDrag;
   // IE's approach to draggable
   if (display.scroller.dragDrop) { display.scroller.dragDrop(); }
-  on(document, "mouseup", dragEnd);
-  on(document, "mousemove", mouseMove);
+  on(display.wrapper.ownerDocument, "mouseup", dragEnd);
+  on(display.wrapper.ownerDocument, "mousemove", mouseMove);
   on(display.scroller, "dragstart", dragStart);
   on(display.scroller, "drop", dragEnd);
 
@@ -12939,8 +12956,8 @@ function leftButtonSelect(cm, event, start, behavior) {
     counter = Infinity;
     e_preventDefault(e);
     display.input.focus();
-    off(document, "mousemove", move);
-    off(document, "mouseup", up);
+    off(display.wrapper.ownerDocument, "mousemove", move);
+    off(display.wrapper.ownerDocument, "mouseup", up);
     doc.history.lastSelOrigin = null;
   }
 
@@ -12950,8 +12967,8 @@ function leftButtonSelect(cm, event, start, behavior) {
   });
   var up = operation(cm, done);
   cm.state.selectingText = up;
-  on(document, "mousemove", move);
-  on(document, "mouseup", up);
+  on(display.wrapper.ownerDocument, "mousemove", move);
+  on(display.wrapper.ownerDocument, "mouseup", up);
 }
 
 // Used when mouse-selecting to adjust the anchor to the proper side
@@ -14474,7 +14491,7 @@ ContentEditableInput.prototype.setUneditable = function (node) {
 };
 
 ContentEditableInput.prototype.onKeyPress = function (e) {
-  if (e.charCode == 0) { return }
+  if (e.charCode == 0 || this.composing) { return }
   e.preventDefault();
   if (!this.cm.isReadOnly())
     { operation(this.cm, applyTextInput)(this.cm, String.fromCharCode(e.charCode == null ? e.keyCode : e.charCode), 0); }
@@ -14656,13 +14673,10 @@ TextareaInput.prototype.init = function (display) {
     var this$1 = this;
 
   var input = this, cm = this.cm;
+  this.createField(display);
+  var te = this.textarea;
 
-  // Wraps and hides input textarea
-  var div = this.wrapper = hiddenTextarea();
-  // The semihidden textarea that is focused when the editor is
-  // focused, and receives input.
-  var te = this.textarea = div.firstChild;
-  display.wrapper.insertBefore(div, display.wrapper.firstChild);
+  display.wrapper.insertBefore(this.wrapper, display.wrapper.firstChild);
 
   // Needed to hide big blue blinking cursor on Mobile Safari (doesn't seem to work in iOS 8 anymore)
   if (ios) { te.style.width = "0px"; }
@@ -14727,6 +14741,14 @@ TextareaInput.prototype.init = function (display) {
       input.composing = null;
     }
   });
+};
+
+TextareaInput.prototype.createField = function (_display) {
+  // Wraps and hides input textarea
+  this.wrapper = hiddenTextarea();
+  // The semihidden textarea that is focused when the editor is
+  // focused, and receives input.
+  this.textarea = this.wrapper.firstChild;
 };
 
 TextareaInput.prototype.prepareSelection = function () {
@@ -15122,7 +15144,7 @@ CodeMirror$1.fromTextArea = fromTextArea;
 
 addLegacyProps(CodeMirror$1);
 
-CodeMirror$1.version = "5.34.0";
+CodeMirror$1.version = "5.37.0";
 
 return CodeMirror$1;
 
@@ -16901,6 +16923,8 @@ module.exports = ComponentView.extend({
     if (editor && this.model.get('editable')) {
       editor.runCommand('open-assets', {
         target: this.model,
+        types: ['image'],
+        accept: 'image/*',
         onSelect: function onSelect() {
           editor.Modal.close();
           editor.AssetManager.setTarget(null);
@@ -16911,7 +16935,7 @@ module.exports = ComponentView.extend({
   render: function render() {
     this.updateAttributes();
     this.updateClasses();
-    this.$el.attr('style', 'max-width: 100%;');
+
     var actCls = this.$el.attr('class') || '';
     if (!this.model.get('src')) this.$el.attr('class', (actCls + ' ' + this.classEmpty).trim());
 
@@ -17750,6 +17774,7 @@ module.exports = {
     if (model) {
       if (model.get('selectable')) {
         editor.select(model);
+        this.initResize(model);
       } else {
         var parent = model.parent();
         while (parent && !parent.get('selectable')) {
@@ -17825,7 +17850,8 @@ module.exports = {
    * @private
    * */
   onSelect: function onSelect() {
-    var editor = this.editor;
+    // Get the selected model directly from the Editor as the event might
+    // be triggered manually without the model
     var model = this.em.getSelected();
     this.updateToolbar(model);
 
@@ -17836,27 +17862,28 @@ module.exports = {
       this.hideHighlighter();
       this.initResize(el);
     } else {
-      editor.stopCommand('resize');
+      this.editor.stopCommand('resize');
     }
   },
 
 
   /**
    * Init resizer on the element if possible
-   * @param  {HTMLElement} el
+   * @param  {HTMLElement|Component} elem
    * @private
    */
-  initResize: function initResize(el) {
+  initResize: function initResize(elem) {
     var em = this.em;
     var editor = em ? em.get('Editor') : '';
     var config = em ? em.get('Config') : '';
     var pfx = config.stylePrefix || '';
     var attrName = 'data-' + pfx + 'handler';
     var resizeClass = pfx + 'resizing';
-    var model = em.get('selectedComponent');
+    var model = !(0, _underscore.isElement)(elem) ? elem : em.getSelected();
     var resizable = model.get('resizable');
+    var el = (0, _underscore.isElement)(elem) ? elem : model.getEl();
     var options = {};
-    var modelToStyle;
+    var modelToStyle = void 0;
 
     var toggleBodyClass = function toggleBodyClass(method, e, opts) {
       var docs = opts.docs;
@@ -17943,11 +17970,12 @@ module.exports = {
       if ((typeof resizable === 'undefined' ? 'undefined' : _typeof(resizable)) == 'object') {
         options = _extends({}, options, resizable);
       }
-
       editor.runCommand('resize', { el: el, options: options });
 
       // On undo/redo the resizer rect is not updating, need somehow to call
       // this.updateRect on undo/redo action
+    } else {
+      editor.stopCommand('resize');
     }
   },
 
@@ -21644,7 +21672,7 @@ var _fetch2 = _interopRequireDefault(_fetch);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = Backbone.View.extend({
-  template: _.template('\n  <form>\n    <div id="<%= pfx %>title"><%= title %></div>\n    <input type="file" id="<%= uploadId %>" name="file" accept="image/*" <%= disabled ? \'disabled\' : \'\' %> multiple/>\n    <div style="clear:both;"></div>\n  </form>\n  '),
+  template: _.template('\n  <form>\n    <div id="<%= pfx %>title"><%= title %></div>\n    <input type="file" id="<%= uploadId %>" name="file" accept="*/*" <%= disabled ? \'disabled\' : \'\' %> multiple/>\n    <div style="clear:both;"></div>\n  </form>\n  '),
 
   events: {},
 
@@ -24131,6 +24159,16 @@ module.exports = function (config) {
 
 
     /**
+     * Return the count of changes made to the content and not yet stored.
+     * This count resets at any `store()`
+     * @return {number}
+     */
+    getDirtyCount: function getDirtyCount() {
+      return em.getDirtyCount();
+    },
+
+
+    /**
      * Update editor dimensions and refresh data useful for positioning of tools
      *
      * This method could be useful when you update, for example, some position
@@ -24270,6 +24308,7 @@ module.exports = function (config) {
     * * `component:styleUpdate` - Triggered when the style of the component is updated, the model is passed as an argument to the callback
     * * `component:styleUpdate:{propertyName}` - Listen for a specific style property change, the model is passed as an argument to the callback
     * * `component:selected` - New component selected, the selected model is passed as an argument to the callback
+    * * `component:deselected` - Component deselected, the deselected model is passed as an argument to the callback
     * ## Blocks
     * * `block:add` - New block added
     * * `block:remove` - Block removed
@@ -24300,6 +24339,8 @@ module.exports = function (config) {
     * * `storage:end:store` - After the store request
     * * `storage:end:load` - After the load request
     * * `storage:error` - On any error on storage request, passes the error as an argument
+    * * `storage:error:store` - Error on store request, passes the error as an argument
+    * * `storage:error:load` - Error on load request, passes the error as an argument
     * ## Canvas
     * * `canvas:dragenter` - When something is dragged inside the canvas, `DataTransfer` instance passed as an argument
     * * `canvas:dragover` - When something is dragging on canvas, `DataTransfer` instance passed as an argument
@@ -24562,8 +24603,8 @@ module.exports = {
   // Texts
   textViewCode: 'Code',
 
-  // Dump unused styles within the editor.
-  dumpUnusedStyles: false
+  // Keep unused styles within the editor
+  keepUnusedStyles: 0
 };
 
 /***/ }),
@@ -24776,13 +24817,10 @@ module.exports = Backbone.Model.extend({
    * @param   {Object}   Options
    * @private
    * */
-  componentSelected: function componentSelected(model, val, options) {
-    if (!this.get('selectedComponent')) {
-      this.trigger('deselect-comp');
-    } else {
-      this.trigger('select-comp', [model, val, options]);
-      this.trigger('component:selected', arguments);
-    }
+  componentSelected: function componentSelected(editor, selected, options) {
+    var prev = this.previous('selectedComponent');
+    prev && this.trigger('component:deselected', prev, options);
+    selected && this.trigger('component:selected', selected, options);
   },
 
 
@@ -24897,7 +24935,7 @@ module.exports = Backbone.Model.extend({
     var config = this.config;
     var wrappesIsBody = config.wrappesIsBody;
     var avoidProt = opts.avoidProtected;
-    var dumpUnusedStyles = opts.dumpUnusedStyles || this.config.dumpUnusedStyles;
+    var keepUnusedStyles = !(0, _underscore.isUndefined)(opts.keepUnusedStyles) ? opts.keepUnusedStyles : config.keepUnusedStyles;
     var cssc = this.get('CssComposer');
     var wrp = this.get('DomComponents').getComponent();
     var protCss = !avoidProt ? config.protectedCss : '';
@@ -24905,7 +24943,7 @@ module.exports = Backbone.Model.extend({
     return protCss + this.get('CodeManager').getCode(wrp, 'css', {
       cssc: cssc,
       wrappesIsBody: wrappesIsBody,
-      dumpUnusedStyles: dumpUnusedStyles
+      keepUnusedStyles: keepUnusedStyles
     });
   },
 
@@ -25079,6 +25117,16 @@ module.exports = Backbone.Model.extend({
     var preview = config.devicePreviewMode;
     var width = device && device.get('widthMedia');
     return device && width && !preview ? '(' + condition + ': ' + width + ')' : '';
+  },
+
+
+  /**
+   * Return the count of changes made to the content and not yet stored.
+   * This count resets at any `store()`
+   * @return {number}
+   */
+  getDirtyCount: function getDirtyCount() {
+    return this.get('changesCount');
   },
 
 
@@ -30309,6 +30357,7 @@ module.exports = function () {
   var defaultStorages = {};
   var eventStart = 'storage:start';
   var eventEnd = 'storage:end';
+  var eventError = 'storage:error';
 
   return {
     /**
@@ -30401,15 +30450,17 @@ module.exports = function () {
      * @return {this}
      * @example
      * storageManager.add('local2', {
-     *   load: function(keys, clb) {
+     *   load: function(keys, clb, clbErr) {
      *     var res = {};
      *     for (var i = 0, len = keys.length; i < len; i++){
      *       var v = localStorage.getItem(keys[i]);
      *       if(v) res[keys[i]] = v;
      *     }
      *     clb(res); // might be called inside some async method
+     *     // In case of errors...
+     *     // clbErr('Went something wrong');
      *   },
-     *   store: function(data, clb) {
+     *   store: function(data, clb, clbErr) {
      *     for(var key in data)
      *       localStorage.setItem(key, data[key]);
      *     clb(); // might be called inside some async method
@@ -30483,6 +30534,8 @@ module.exports = function () {
       return st ? st.store(toStore, function (res) {
         clb && clb(res);
         _this.onEnd('store', res);
+      }, function (err) {
+        _this.onError('store', err);
       }) : null;
     },
 
@@ -30524,6 +30577,8 @@ module.exports = function () {
 
           clb && clb(result);
           _this2.onEnd('load', result);
+        }, function (err) {
+          _this2.onError('load', err);
         });
       } else {
         clb && clb(result);
@@ -30572,6 +30627,19 @@ module.exports = function () {
       if (em) {
         em.trigger(eventEnd);
         ctx && em.trigger(eventEnd + ':' + ctx, data);
+      }
+    },
+
+
+    /**
+     * On error callback
+     * @private
+     */
+    onError: function onError(ctx, data) {
+      if (em) {
+        em.trigger(eventError, data);
+        ctx && em.trigger(eventError + ':' + ctx, data);
+        this.onEnd(ctx, data);
       }
     },
 
@@ -30765,12 +30833,17 @@ module.exports = __webpack_require__(0).Model.extend({
   /**
    * Triggered on request error
    * @param  {Object} err Error
+   * @param  {Function} [clbErr] Error callback
    * @private
    */
-  onError: function onError(err) {
-    var em = this.get('em');
-    console.error(err);
-    em && em.trigger('storage:error', err);
+  onError: function onError(err, clbErr) {
+    if (clbErr) {
+      clbErr(err);
+    } else {
+      var em = this.get('em');
+      console.error(err);
+      em && em.trigger('storage:error', err);
+    }
   },
 
 
@@ -30789,17 +30862,17 @@ module.exports = __webpack_require__(0).Model.extend({
     clb && clb(res);
     em && em.trigger('storage:response', res);
   },
-  store: function store(data, clb) {
+  store: function store(data, clb, clbErr) {
     var body = {};
 
     for (var key in data) {
       body[key] = data[key];
     }
 
-    this.request(this.get('urlStore'), { body: body }, clb);
+    this.request(this.get('urlStore'), { body: body }, clb, clbErr);
   },
-  load: function load(keys, clb) {
-    this.request(this.get('urlLoad'), { method: 'get' }, clb);
+  load: function load(keys, clb, clbErr) {
+    this.request(this.get('urlLoad'), { method: 'get' }, clb, clbErr);
   },
 
 
@@ -30807,14 +30880,17 @@ module.exports = __webpack_require__(0).Model.extend({
    * Execute remote request
    * @param  {string} url Url
    * @param  {Object} [opts={}] Options
-   * @param  {[type]} [clb=null] Callback
+   * @param  {Function} [clb=null] Callback
+   * @param  {Function} [clbErr=null] Error callback
    * @private
    */
   request: function request(url) {
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     var _this = this;
 
-    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var clb = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+    var clbErr = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
     var typeJson = this.get('contentTypeJson');
     var headers = this.get('headers') || {};
@@ -30868,7 +30944,7 @@ module.exports = __webpack_require__(0).Model.extend({
     }).then(function (text) {
       return _this.onResponse(text, clb);
     }).catch(function (err) {
-      return _this.onError(err);
+      return _this.onError(err, clbErr);
     });
   }
 });
@@ -33560,7 +33636,7 @@ module.exports = __webpack_require__(0).Model.extend({
           var mRules = atRules[atRule];
           mRules.forEach(function (rule) {
             // Special case for multiple font-faces on one page
-            var ruleStr = _this2.buildFromRule(rule, dump);
+            var ruleStr = _this2.buildFromRule(rule, dump, opts);
             if (atRule === '@font-face') {
               code += atRule + '{' + ruleStr + '}';
             } else {
@@ -33604,7 +33680,7 @@ module.exports = __webpack_require__(0).Model.extend({
     // This will not render a rule if there is no its component
     rule.get('selectors').each(function (selector) {
       var name = selector.getFullName();
-      if (_this3.compCls.indexOf(name) >= 0 || _this3.ids.indexOf(name) >= 0 || opts.dumpUnusedStyles) {
+      if (_this3.compCls.indexOf(name) >= 0 || _this3.ids.indexOf(name) >= 0 || opts.keepUnusedStyles) {
         found = 1;
       }
     });
@@ -34471,7 +34547,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
           var kw = keywords[word]
           return ret(kw.type, kw.style, word)
         }
-        if (word == "async" && stream.match(/^(\s|\/\*.*?\*\/)*[\(\w]/, false))
+        if (word == "async" && stream.match(/^(\s|\/\*.*?\*\/)*[\[\(\w]/, false))
           return ret("async", "keyword", word)
       }
       return ret("variable", "variable", word)
@@ -34701,6 +34777,9 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       } else if (isTS && value == "namespace") {
         cx.marked = "keyword"
         return cont(pushlex("form"), expression, block, poplex)
+      } else if (isTS && value == "abstract") {
+        cx.marked = "keyword"
+        return cont(statement)
       } else {
         return cont(pushlex("stat"), maybelabel);
       }
@@ -34745,6 +34824,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (type == "{") return contCommasep(objprop, "}", null, maybeop);
     if (type == "quasi") return pass(quasi, maybeop);
     if (type == "new") return cont(maybeTarget(noComma));
+    if (type == "import") return cont(expression);
     return cont();
   }
   function maybeexpression(type) {
@@ -34904,19 +34984,19 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     }
   }
   function typeexpr(type, value) {
+    if (value == "keyof" || value == "typeof") {
+      cx.marked = "keyword"
+      return cont(value == "keyof" ? typeexpr : expressionNoComma)
+    }
     if (type == "variable" || value == "void") {
-      if (value == "keyof") {
-        cx.marked = "keyword"
-        return cont(typeexpr)
-      } else {
-        cx.marked = "type"
-        return cont(afterType)
-      }
+      cx.marked = "type"
+      return cont(afterType)
     }
     if (type == "string" || type == "number" || type == "atom") return cont(afterType);
     if (type == "[") return cont(pushlex("]"), commasep(typeexpr, "]", ","), poplex, afterType)
     if (type == "{") return cont(pushlex("}"), commasep(typeprop, "}", ",;"), poplex, afterType)
     if (type == "(") return cont(commasep(typearg, ")"), maybeReturnType)
+    if (type == "<") return cont(commasep(typeexpr, ">"), typeexpr)
   }
   function maybeReturnType(type) {
     if (type == "=>") return cont(typeexpr)
@@ -34933,13 +35013,14 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       return cont(expression, maybetype, expect("]"), typeprop)
     }
   }
-  function typearg(type) {
-    if (type == "variable") return cont(typearg)
-    else if (type == ":") return cont(typeexpr)
+  function typearg(type, value) {
+    if (type == "variable" && cx.stream.match(/^\s*[?:]/, false) || value == "?") return cont(typearg)
+    if (type == ":") return cont(typeexpr)
+    return pass(typeexpr)
   }
   function afterType(type, value) {
     if (value == "<") return cont(pushlex(">"), commasep(typeexpr, ">"), poplex, afterType)
-    if (value == "|" || type == ".") return cont(typeexpr)
+    if (value == "|" || type == "." || value == "&") return cont(typeexpr)
     if (type == "[") return cont(expect("]"), afterType)
     if (value == "extends" || value == "implements") { cx.marked = "keyword"; return cont(typeexpr) }
   }
@@ -34982,7 +35063,8 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   function maybeelse(type, value) {
     if (type == "keyword b" && value == "else") return cont(pushlex("form", "else"), statement, poplex);
   }
-  function forspec(type) {
+  function forspec(type, value) {
+    if (value == "await") return cont(forspec);
     if (type == "(") return cont(pushlex(")"), forspec1, expect(")"), poplex);
   }
   function forspec1(type) {
@@ -35071,6 +35153,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   }
   function afterImport(type) {
     if (type == "string") return cont();
+    if (type == "(") return pass(expression);
     return pass(importSpec, maybeMoreImports, maybeFrom);
   }
   function importSpec(type, value) {
@@ -41090,7 +41173,7 @@ module.exports = Backbone.View.extend({
     this.getAssetsEl().scrollTop = 0;
 
     if (handleAdd) {
-      handleAdd(url);
+      handleAdd.bind(this)(url);
     } else {
       this.options.globalCollection.add(url, { at: 0 });
     }
@@ -45836,7 +45919,7 @@ module.exports = {
     modal.setContent(this.$editors);
     modal.open();
     this.htmlEditor.setContent(editor.getHtml());
-    this.cssEditor.setContent(editor.getCss({ dumpUnusedSelectors: 1 }));
+    this.cssEditor.setContent(editor.getCss());
   },
   stop: function stop(editor) {
     var modal = editor.Modal;
@@ -46521,22 +46604,36 @@ module.exports = {
     var modal = editor.Modal;
     var am = editor.AssetManager;
     var config = am.getConfig();
+    var amContainer = am.getContainer();
     var title = opts.modalTitle || config.modalTitle || '';
+    var types = opts.types;
+    var accept = opts.accept;
 
     am.setTarget(opts.target);
     am.onClick(opts.onClick);
     am.onDblClick(opts.onDblClick);
     am.onSelect(opts.onSelect);
 
-    if (!this.rendered) {
-      am.render(am.getAll().filter(function (asset) {
-        return asset.get('type') == 'image';
-      }));
+    if (!this.rendered || types) {
+      var assets = am.getAll();
+
+      if (types) {
+        assets = assets.filter(function (a) {
+          return types.indexOf(a.get('type')) !== -1;
+        });
+      }
+
+      am.render(assets);
       this.rendered = 1;
     }
 
+    if (accept) {
+      var uploadEl = amContainer.querySelector('input#' + config.stylePrefix + 'uploadFile');
+      uploadEl && uploadEl.setAttribute('accept', accept);
+    }
+
     modal.setTitle(title);
-    modal.setContent(am.getContainer());
+    modal.setContent(amContainer);
     modal.open();
   }
 };
@@ -46887,6 +46984,7 @@ module.exports = {
     }
 
     canvasResizer.setOptions(options);
+    canvasResizer.blur();
     canvasResizer.focus(el);
     return canvasResizer;
   },

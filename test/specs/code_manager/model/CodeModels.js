@@ -31,16 +31,16 @@ module.exports = {
         obj = null;
       });
 
-      it('Build correctly one component', () => {
+      test('Build correctly one component', () => {
         expect(obj.build(comp)).toEqual('');
       });
 
-      it('Build correctly empty component inside', () => {
+      test('Build correctly empty component inside', () => {
         var m1 = comp.get('components').add({});
         expect(obj.build(comp)).toEqual('<div></div>');
       });
 
-      it('Build correctly not empty component inside', () => {
+      test('Build correctly not empty component inside', () => {
         var m1 = comp.get('components').add({
           tagName: 'article',
           attributes: {
@@ -53,7 +53,7 @@ module.exports = {
         );
       });
 
-      it('Build correctly component with classes', () => {
+      test('Build correctly component with classes', () => {
         var m1 = comp.get('components').add({
           tagName: 'article',
           attributes: {
@@ -90,16 +90,16 @@ module.exports = {
         obj = null;
       });
 
-      it('Build correctly one component', () => {
+      test('Build correctly one component', () => {
         expect(obj.build(comp)).toEqual('');
       });
 
-      it('Build correctly empty component inside', () => {
+      test('Build correctly empty component inside', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         expect(obj.build(comp)).toEqual('');
       });
 
-      it('Build correctly component with style inside', () => {
+      test('Build correctly component with style inside', () => {
         var m1 = comp.get('components').add({
           tagName: 'article',
           style: {
@@ -112,7 +112,7 @@ module.exports = {
         );
       });
 
-      it('Build correctly component with class styled', () => {
+      test('Build correctly component with class styled', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
 
@@ -125,7 +125,7 @@ module.exports = {
         );
       });
 
-      it('Build correctly component styled with class and state', () => {
+      test('Build correctly component styled with class and state', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
 
@@ -139,7 +139,7 @@ module.exports = {
         );
       });
 
-      it('Build correctly with more classes', () => {
+      test('Build correctly with more classes', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
         var cls2 = m1.get('classes').add({ name: 'class2' });
@@ -153,7 +153,7 @@ module.exports = {
         );
       });
 
-      it('Build rules with mixed classes', () => {
+      test('Build rules with mixed classes', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
         var cls2 = m1.get('classes').add({ name: 'class2' });
@@ -168,7 +168,7 @@ module.exports = {
         );
       });
 
-      it('Build rules with only not class based selectors', () => {
+      test('Build rules with only not class based selectors', () => {
         var cssc = newCssComp();
         var rule = cssc.add([]);
         rule.set('style', { prop1: 'value1', prop2: 'value2' });
@@ -179,7 +179,7 @@ module.exports = {
         );
       });
 
-      it('Build correctly with class styled out', () => {
+      test('Build correctly with class styled out', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
         var cls2 = m1.get('classes').add({ name: 'class2' });
@@ -195,7 +195,7 @@ module.exports = {
         );
       });
 
-      it('Rule with media query', () => {
+      test('Rule with media query', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
         var cls2 = m1.get('classes').add({ name: 'class2' });
@@ -210,7 +210,7 @@ module.exports = {
         );
       });
 
-      it('Rules mixed with media queries', () => {
+      test('Rules mixed with media queries', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
         var cls2 = m1.get('classes').add({ name: 'class2' });
@@ -237,7 +237,7 @@ module.exports = {
         );
       });
 
-      it('Avoid useless code', () => {
+      test('Avoid useless code', () => {
         var m1 = comp.get('components').add({ tagName: 'article' });
         var cls1 = m1.get('classes').add({ name: 'class1' });
 
@@ -249,14 +249,14 @@ module.exports = {
         expect(obj.build(comp, { cssc })).toEqual('');
       });
 
-      it('Render correctly a rule without avoidInlineStyle option', () => {
+      test('Render correctly a rule without avoidInlineStyle option', () => {
         comp.setStyle({ color: 'red' });
         const id = comp.getId();
         const result = `#${id}{color:red;}`;
         expect(obj.build(comp, { cssc: cc })).toEqual(result);
       });
 
-      it('Render correctly a rule with avoidInlineStyle option', () => {
+      test('Render correctly a rule with avoidInlineStyle option', () => {
         em.getConfig().avoidInlineStyle = 1;
         comp = new Component(
           {},
@@ -271,7 +271,7 @@ module.exports = {
         expect(obj.build(comp, { cssc: cc, em })).toEqual(result);
       });
 
-      it('Render correctly a rule with avoidInlineStyle and state', () => {
+      test('Render correctly a rule with avoidInlineStyle and state', () => {
         em.getConfig().avoidInlineStyle = 1;
         const state = 'hover';
         comp.config.avoidInlineStyle = 1;
@@ -282,7 +282,7 @@ module.exports = {
         expect(obj.build(comp, { cssc: cc, em })).toEqual(result);
       });
 
-      it('Render correctly a rule with avoidInlineStyle and w/o state', () => {
+      test('Render correctly a rule with avoidInlineStyle and w/o state', () => {
         em.getConfig().avoidInlineStyle = 1;
         const state = 'hover';
         comp.config.avoidInlineStyle = 1;

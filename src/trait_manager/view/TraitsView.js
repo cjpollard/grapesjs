@@ -34,8 +34,9 @@ module.exports = DomainViews.extend({
    */
   updatedCollection() {
     const ppfx = this.ppfx;
+    const comp = this.em.getSelected();
     this.el.className = `${this.className} ${ppfx}one-bg ${ppfx}two-color`;
-    var comp = this.em.get('selectedComponent');
+
     if (comp) {
       this.collection = comp.get('traits');
       this.render();

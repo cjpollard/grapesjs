@@ -380,7 +380,7 @@ module.exports = {
       });
 
       test('Build top, left, right, bottom', () => {
-        var res = {
+        var resH = {
           type: 'integer',
           units: ['px', '%', 'vh'],
           defaults: 0

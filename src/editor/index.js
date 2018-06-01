@@ -434,14 +434,11 @@ module.exports = config => {
      * @example
      * editor.runCommand('myCommand', {someValue: 1});
      */
-    runCommand(id, options) {
-      var result;
-      var command = em.get('Commands').get(id);
+    runCommand(id, options = {}) {
+      let result;
+      const command = em.get('Commands').get(id);
+      if (command) result = command.callRun(this, options);
 
-      if (command) {
-        result = command.run(this, this, options);
-        this.trigger('run:' + id);
-      }
       return result;
     },
 
@@ -453,14 +450,11 @@ module.exports = config => {
      * @example
      * editor.stopCommand('myCommand', {someValue: 1});
      */
-    stopCommand(id, options) {
-      var result;
-      var command = em.get('Commands').get(id);
+    stopCommand(id, options = {}) {
+      let result;
+      const command = em.get('Commands').get(id);
+      if (command) result = command.callStop(this, options);
 
-      if (command) {
-        result = command.stop(this, this, options);
-        this.trigger('stop:' + id);
-      }
       return result;
     },
 

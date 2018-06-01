@@ -51,7 +51,7 @@ module.exports = Backbone.View.extend({
     // I have to render keyframes of the same name together
     // Unfortunately at the moment I didn't find the way of appending them
     // if not staticly, via appendData
-    if (model.get('atRuleType') == 'keyframes') {
+    if (model.get('atRuleType') === 'keyframes') {
       const atRule = model.getAtRule();
       let atRuleEl = this.atRules[atRule];
 
@@ -121,8 +121,7 @@ module.exports = Backbone.View.extend({
     $el.empty();
 
     // Create devices related DOM structure
-    this.em
-      .get('DeviceManager')
+    this.em.get('DeviceManager')
       .getAll()
       .map(model => model.get('widthMedia'))
       .sort(

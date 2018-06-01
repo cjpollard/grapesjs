@@ -124,7 +124,11 @@ module.exports = Backbone.View.extend({
    * @return {HTMLElement}
    */
   getClearEl() {
-    return this.el.querySelector(`[${clearProp}]`);
+    if (!this.clearEl) {
+      this.clearEl = this.el.querySelector(`[${clearProp}]`);
+    }
+
+    return this.clearEl;
   },
 
   /**

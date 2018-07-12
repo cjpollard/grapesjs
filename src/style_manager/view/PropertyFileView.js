@@ -123,6 +123,8 @@ module.exports = PropertyView.extend({
       this.am.setTarget(null);
       editor.runCommand('open-assets', {
         target: this.model,
+        types: ['image'],
+        accepts: 'image/*',
         onSelect(target) {
           that.modal.close();
           that.spreadUrl(target.get('src'));

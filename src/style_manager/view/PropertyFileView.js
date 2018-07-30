@@ -113,21 +113,20 @@ module.exports = PropertyView.extend({
    * @return void
    * */
   openAssetManager(e) {
-    var that = this;
-    var em = this.em;
-    var editor = em ? em.get('Editor') : '';
+    const that = this;
+    const { em, modal } = this;
+    const editor = em ? em.get('Editor') : '';
 
     if (editor) {
-      this.modal.setTitle('Select image');
-      this.modal.setContent(this.am.getContainer());
-      this.am.setTarget(null);
       editor.runCommand('open-assets', {
-        target: this.model,
         types: ['image'],
-        accepts: 'image/*',
-        onSelect(target) {
-          that.modal.close();
-          that.spreadUrl(target.get('src'));
+        accept: 'image/*',
+        target: this.getTargetModel(),
+        onClick() {},
+        onDblClick() {},
+        onSelect(asset) {
+          modal.close();
+          that.spreadUrl(asset.get('src'));
         }
       });
     }

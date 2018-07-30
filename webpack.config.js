@@ -10,7 +10,7 @@ module.exports = env => {
   const isProd = env === 'prod';
   const output = {
     path: path.join(__dirname),
-    filename: 'dist/grapes.min.js',
+    filename: 'dist/grapes.js',
     library: name,
     libraryTarget: 'umd',
   };
@@ -21,7 +21,7 @@ module.exports = env => {
       new webpack.BannerPlugin(`${name} - ${pkg.version}`),
     ];
   } else if (env === 'dev') {
-    output.filename = 'dist/grapes.js';
+    output.filename = 'dist/grapes.dev.js';
   } else {
     const index = 'index.html';
     const indexDev = `_${index}`;

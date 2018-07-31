@@ -1029,6 +1029,20 @@ module.exports = {
               type: 'integer',
               defaults: 1,
               functionName: 'scaleZ'
+            },
+            {
+              property: 'transform-translate-x',
+              type: 'integer',
+              units: ['px'],
+              defaults: 0,
+              functionName: 'translateX'
+            },
+            {
+              property: 'transform-translate-y',
+              type: 'integer',
+              units: ['px'],
+              defaults: 0,
+              functionName: 'translateY'
             }
           ]
         };

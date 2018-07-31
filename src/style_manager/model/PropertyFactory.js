@@ -89,6 +89,7 @@ module.exports = () => ({
         case 'transition-timing-function':
         case 'cursor':
         case 'overflow':
+        case 'text-transform':
           obj.type = 'select';
           break;
         case 'top':
@@ -133,6 +134,8 @@ module.exports = () => ({
         case 'transform-scale-x':
         case 'transform-scale-y':
         case 'transform-scale-z':
+        case 'transform-translate-x':
+        case 'transform-translate-y':
           obj.type = 'integer';
           break;
         case 'margin':
@@ -201,6 +204,8 @@ module.exports = () => ({
         case 'transform-rotate-x':
         case 'transform-rotate-y':
         case 'transform-rotate-z':
+        case 'transform-translate-x':
+        case 'transform-translate-y':
           obj.defaults = 0;
           break;
         case 'transform-scale-x':
@@ -271,6 +276,9 @@ module.exports = () => ({
         case 'overflow':
           obj.defaults = 'visible';
           break;
+        case 'text-transform':
+          obj.defaults = 'none';
+          break;
       }
 
       // Units
@@ -320,6 +328,8 @@ module.exports = () => ({
         case 'box-shadow-blur':
         case 'box-shadow-spread':
         case 'perspective':
+        case 'transform-translate-x':
+        case 'transform-translate-y':
           obj.units = ['px'];
           break;
         case 'transition-duration':
@@ -394,6 +404,12 @@ module.exports = () => ({
           break;
         case 'transform-scale-z':
           obj.functionName = 'scaleZ';
+          break;
+        case 'transform-translate-x':
+          obj.functionName = 'translateX';
+          break;
+        case 'transform-translate-y':
+          obj.functionName = 'translateY';
           break;
         case 'background-image':
           obj.functionName = 'url';
@@ -562,6 +578,15 @@ module.exports = () => ({
             { value: 'auto' }
           ];
           break;
+        case 'text-transform':
+          obj.list = [
+            { value: 'none' },
+            { value: 'inherit' },
+            { value: 'capitalize' },
+            { value: 'uppercase' },
+            { value: 'lowercase' }
+          ];
+          break;
       }
 
       // Properties
@@ -638,7 +663,9 @@ module.exports = () => ({
             'transform-rotate-z',
             'transform-scale-x',
             'transform-scale-y',
-            'transform-scale-z'
+            'transform-scale-z',
+            'transform-translate-x',
+            'transform-translate-y'
           ]);
           break;
       }

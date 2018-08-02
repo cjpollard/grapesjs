@@ -4,6 +4,7 @@
 import { on, off } from 'utils/mixins';
 
 const RTE_KEY = '_rte';
+const formatBlock = 'formatBlock';
 
 const defActions = {
   bold: {
@@ -30,15 +31,88 @@ const defActions = {
     attributes: { title: 'Strike-through' },
     result: rte => rte.exec('strikeThrough')
   },
+  subscript: {
+    name: 'subscript',
+    icon: '<p>A<sub>s</sub></p>',
+    attributes: { title: 'Subscript' },
+    result: rte => rte.exec('subscript')
+  },
+  superscript: {
+    name: 'superscript',
+    icon: '<p>A<sup>s</sup></p>',
+    attributes: { title: 'Superscript' },
+    result: rte => rte.exec('superscript')
+  },
+  quote: {
+    icon: '&#8220; &#8221;',
+    name: 'quote',
+    attributes: { title: 'Quote' },
+    result: rte => rte.exec(formatBlock, '<blockquote>')
+  },
+  olist: {
+    icon: '&#35;',
+    name: 'olist',
+    attributes: { title: 'Ordered List' },
+    result: rte => rte.exec('insertOrderedList')
+  },
+  ulist: {
+    icon: '&#8226;',
+    name: 'ulist',
+    attributes: { title: 'Unordered List' },
+    result: rte => rte.exec('insertUnorderedList')
+  },
+  code: {
+    icon: '&lt;/&gt;',
+    name: 'code',
+    attributes: { title: 'Code' },
+    result: rte => rte.exec(formatBlock, '<pre>')
+  },
+  line: {
+    icon: '&#8213;',
+    name: 'line',
+    attributes: { title: 'Horizontal Line' },
+    result: rte => rte.exec('insertHorizontalRule')
+  },
+  indent: {
+    icon: '',
+    name: 'indent',
+    attributes: { title: 'Indent', class: 'gjs-rte-action fa fa-indent' },
+    result: rte => rte.exec('indent')
+  },
+  outdent: {
+    icon: '',
+    name: 'outdent',
+    attributes: { title: 'Outdent', class: 'gjs-rte-action fa fa-outdent' },
+    result: rte => rte.exec('outdent')
+  },
   link: {
-    icon: `<span style="transform:rotate(45deg)">&supdsub;</span>`,
+    icon: '&#128279;',
     name: 'link',
-    attributes: {
-      style: 'font-size:1.4rem;padding:0 4px 2px;',
-      title: 'Link'
-    },
-    result: rte =>
-      rte.insertHTML(`<a class="link" href="">${rte.selection()}</a>`)
+    attributes: { title: 'Link' },
+    result: rte => {
+      const url = window.prompt('Enter the link URL');
+      if (url) rte.exec('createLink', url);
+    }
+  },
+  undo: {
+    icon: '',
+    name: 'undo',
+    attributes: { title: 'Undo', class: 'gjs-rte-action fa fa-undo' },
+    result: rte => rte.exec('undo')
+  },
+  redo: {
+    icon: '',
+    name: 'redo',
+    attributes: { title: 'Redo', class: 'gjs-rte-action fa fa-repeat' },
+    result: rte => rte.exec('redo')
+  },
+  removeFormat: {
+    icon: '<u><i>T</i></u><sub>x</sub>',
+    name: 'removeFormat',
+    attributes: { title: 'Remove formatting' },
+    result: rte => {
+      rte.exec('removeFormat');
+    }
   }
 };
 

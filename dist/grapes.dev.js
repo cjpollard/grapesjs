@@ -40608,7 +40608,7 @@ module.exports = {
   adjustToolbar: 1,
 
   // Default RTE actions
-  actions: ['bold', 'italic', 'underline', 'strikethrough', 'link']
+  actions: ['bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'link', 'quote', 'ulist', 'olist', 'code', 'line', 'indent', 'outdent', 'undo', 'redo', 'removeFormat']
 };
 
 /***/ }),
@@ -40976,6 +40976,7 @@ var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var RTE_KEY = '_rte';
+var formatBlock = 'formatBlock';
 
 var defActions = {
   bold: {
@@ -41010,15 +41011,109 @@ var defActions = {
       return rte.exec('strikeThrough');
     }
   },
-  link: {
-    icon: '<span style="transform:rotate(45deg)">&supdsub;</span>',
-    name: 'link',
-    attributes: {
-      style: 'font-size:1.4rem;padding:0 4px 2px;',
-      title: 'Link'
-    },
+  subscript: {
+    name: 'subscript',
+    icon: '<p>A<sub>s</sub></p>',
+    attributes: { title: 'Subscript' },
     result: function result(rte) {
-      return rte.insertHTML('<a class="link" href="">' + rte.selection() + '</a>');
+      return rte.exec('subscript');
+    }
+  },
+  superscript: {
+    name: 'superscript',
+    icon: '<p>A<sup>s</sup></p>',
+    attributes: { title: 'Superscript' },
+    result: function result(rte) {
+      return rte.exec('superscript');
+    }
+  },
+  quote: {
+    icon: '&#8220; &#8221;',
+    name: 'quote',
+    attributes: { title: 'Quote' },
+    result: function result(rte) {
+      return rte.exec(formatBlock, '<blockquote>');
+    }
+  },
+  olist: {
+    icon: '&#35;',
+    name: 'olist',
+    attributes: { title: 'Ordered List' },
+    result: function result(rte) {
+      return rte.exec('insertOrderedList');
+    }
+  },
+  ulist: {
+    icon: '&#8226;',
+    name: 'ulist',
+    attributes: { title: 'Unordered List' },
+    result: function result(rte) {
+      return rte.exec('insertUnorderedList');
+    }
+  },
+  code: {
+    icon: '&lt;/&gt;',
+    name: 'code',
+    attributes: { title: 'Code' },
+    result: function result(rte) {
+      return rte.exec(formatBlock, '<pre>');
+    }
+  },
+  line: {
+    icon: '&#8213;',
+    name: 'line',
+    attributes: { title: 'Horizontal Line' },
+    result: function result(rte) {
+      return rte.exec('insertHorizontalRule');
+    }
+  },
+  indent: {
+    icon: '',
+    name: 'indent',
+    attributes: { title: 'Indent', class: 'gjs-rte-action fa fa-indent' },
+    result: function result(rte) {
+      return rte.exec('indent');
+    }
+  },
+  outdent: {
+    icon: '',
+    name: 'outdent',
+    attributes: { title: 'Outdent', class: 'gjs-rte-action fa fa-outdent' },
+    result: function result(rte) {
+      return rte.exec('outdent');
+    }
+  },
+  link: {
+    icon: '&#128279;',
+    name: 'link',
+    attributes: { title: 'Link' },
+    result: function result(rte) {
+      var url = window.prompt('Enter the link URL');
+      if (url) rte.exec('createLink', url);
+    }
+  },
+  undo: {
+    icon: '',
+    name: 'undo',
+    attributes: { title: 'Undo', class: 'gjs-rte-action fa fa-undo' },
+    result: function result(rte) {
+      return rte.exec('undo');
+    }
+  },
+  redo: {
+    icon: '',
+    name: 'redo',
+    attributes: { title: 'Redo', class: 'gjs-rte-action fa fa-repeat' },
+    result: function result(rte) {
+      return rte.exec('redo');
+    }
+  },
+  removeFormat: {
+    icon: '<u><i>T</i></u><sub>x</sub>',
+    name: 'removeFormat',
+    attributes: { title: 'Remove formatting' },
+    result: function result(rte) {
+      rte.exec('removeFormat');
     }
   }
 };

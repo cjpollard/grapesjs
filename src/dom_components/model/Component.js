@@ -14,6 +14,7 @@ import {
 } from 'underscore';
 import { shallowDiff, hasDnd } from 'utils/mixins';
 import Styleable from 'domain_abstract/model/Styleable';
+import { ENGINE_METHOD_STORE } from 'constants';
 
 const Backbone = require('backbone');
 const Components = require('./Components');
@@ -583,6 +584,13 @@ const Component = Backbone.Model.extend(Styleable).extend(
             command: 'tlb-delete'
           });
         }
+        tb.push({
+          attributes: { class: 'fa fa-cog' },
+          command: (editor, opts) => {
+            editor.Panels.getButton('views', 'open-tm').set('active', true);
+            editor.Panels.getButton('views', 'open-tm').trigger('updateActive');
+          }
+        });
         model.set('toolbar', tb);
       }
     },

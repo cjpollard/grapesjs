@@ -1033,14 +1033,14 @@ module.exports = {
             {
               property: 'transform-translate-x',
               type: 'integer',
-              units: ['px'],
+              units: ['px', '%'],
               defaults: 0,
               functionName: 'translateX'
             },
             {
               property: 'transform-translate-y',
               type: 'integer',
-              units: ['px'],
+              units: ['px', '%'],
               defaults: 0,
               functionName: 'translateY'
             }

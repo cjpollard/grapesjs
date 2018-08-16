@@ -328,9 +328,11 @@ module.exports = () => ({
         case 'box-shadow-blur':
         case 'box-shadow-spread':
         case 'perspective':
+          obj.units = ['px'];
+          break;
         case 'transform-translate-x':
         case 'transform-translate-y':
-          obj.units = ['px'];
+          obj.units = ['px', '%'];
           break;
         case 'transition-duration':
           obj.units = ['s'];

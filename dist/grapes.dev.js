@@ -44078,7 +44078,7 @@ module.exports = function () {
           case 'height':
           case 'max-height':
           case 'min-height':
-            obj.fixedValues = ['initial', 'inherit', 'auto', 'calc([0-9%-+pxvhw]+)'];
+            obj.fixedValues = ['initial', 'inherit', 'auto', 'calc([0-9%\-\+pxvhw]+)'];
             break;
           case 'font-size':
             obj.fixedValues = ['medium', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large', 'smaller', 'larger', 'length', 'initial', 'inherit'];
@@ -44156,6 +44156,7 @@ module.exports = function () {
           case 'transform-scale-z':
           case 'transform-translate-x':
           case 'transform-translate-y':
+          case 'z-index':
             obj.type = 'integer';
             break;
           case 'margin':
@@ -44226,6 +44227,7 @@ module.exports = function () {
           case 'transform-rotate-z':
           case 'transform-translate-x':
           case 'transform-translate-y':
+          case 'z-index':
             obj.defaults = 0;
             break;
           case 'transform-scale-x':

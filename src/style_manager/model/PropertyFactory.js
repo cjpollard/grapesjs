@@ -136,6 +136,7 @@ module.exports = () => ({
         case 'transform-scale-z':
         case 'transform-translate-x':
         case 'transform-translate-y':
+        case 'z-index':
           obj.type = 'integer';
           break;
         case 'margin':
@@ -206,6 +207,7 @@ module.exports = () => ({
         case 'transform-rotate-z':
         case 'transform-translate-x':
         case 'transform-translate-y':
+        case 'z-index':
           obj.defaults = 0;
           break;
         case 'transform-scale-x':

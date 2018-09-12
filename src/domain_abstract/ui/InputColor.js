@@ -44,7 +44,7 @@ module.exports = Input.extend({
     colorEl.get(0).style.backgroundColor = valueClr;
 
     // This prevents from adding multiple thumbs in spectrum
-    if (opts.fromTarget) {
+    if (opts.fromInput) {
       colorEl.spectrum('set', valueClr);
       this.noneColor = value == 'none';
     }

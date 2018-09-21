@@ -206,7 +206,7 @@ module.exports = () => {
       let wrapper = { ...c.wrapper };
       wrapper['custom-name'] = c.wrapperName;
       wrapper.wrapper = 1;
-      wrapper.type = 'wrapper';
+      // wrapper.type = 'wrapper';
 
       // Components might be a wrapper
       if (

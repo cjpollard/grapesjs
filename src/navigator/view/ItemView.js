@@ -136,9 +136,11 @@ module.exports = Backbone.View.extend({
    */
   handleEdit(e) {
     e && e.stopPropagation();
+    const em = this.em;
     const inputEl = this.getInputName();
     inputEl[inputProp] = true;
     inputEl.focus();
+    em && em.setEditing(1);
   },
 
   /**
@@ -146,10 +148,12 @@ module.exports = Backbone.View.extend({
    */
   handleEditEnd(e) {
     e && e.stopPropagation();
+    const em = this.em;
     const inputEl = this.getInputName();
     const name = inputEl.textContent;
     inputEl[inputProp] = false;
     this.model.set({ name });
+    em && em.setEditing(0);
   },
 
   /**

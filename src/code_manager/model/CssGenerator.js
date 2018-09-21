@@ -72,10 +72,11 @@ module.exports = require('backbone').Model.extend({
       for (let atRule in atRules) {
         let rulesStr = '';
         const mRules = atRules[atRule];
+
         mRules.forEach(rule => {
-          // Special case for multiple font-faces on one page
           const ruleStr = this.buildFromRule(rule, dump, opts);
-          if (atRule === '@font-face') {
+
+          if (rule.get('singleAtRule')) {
             code += `${atRule}{${ruleStr}}`;
           } else {
             rulesStr += ruleStr;

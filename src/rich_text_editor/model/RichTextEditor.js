@@ -88,10 +88,18 @@ const defActions = {
   link: {
     icon: '&#128279;',
     name: 'link',
-    attributes: { title: 'Link' },
+    attributes: {
+      style: 'font-size:1.4rem;padding:0 4px 2px;',
+      title: 'Link'
+    },
     result: rte => {
-      const url = window.prompt('Enter the link URL');
-      if (url) rte.exec('createLink', url);
+      const anchor = rte.selection().anchorNode;
+      const nextSibling = anchor && anchor.nextSibling;
+      if (nextSibling && nextSibling.nodeName == 'A') {
+        rte.exec('unlink');
+      } else {
+        rte.insertHTML(`<a class="link" href="">${rte.selection()}</a>`);
+      }
     }
   },
   undo: {

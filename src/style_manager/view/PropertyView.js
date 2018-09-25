@@ -332,7 +332,7 @@ module.exports = Backbone.View.extend({
     }
 
     // Avoid target update if the changes comes from it
-    if (!opt.fromTarget) {
+    if (!opt.fromTarget || (opt.fromTarget && opt.fromInput)) {
       // The onChange is used by Composite/Stack properties, so I'd avoid sending
       // it back if the change comes from one of those
       if (onChange && !opt.fromParent) {

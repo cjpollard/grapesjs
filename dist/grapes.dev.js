@@ -35559,7 +35559,7 @@ module.exports = Backbone.View.extend({
   handleChange: function handleChange(e) {
     e.stopPropagation();
     var value = this.getInputEl().value;
-    this.model.set({ value: value }, { fromInput: 1 });
+    this.model.set({ value: value }, { fromInput: 1, fromTarget: 1 });
     this.elementUpdated();
   },
 
@@ -35647,7 +35647,7 @@ module.exports = Input.extend({
     colorEl.get(0).style.backgroundColor = valueClr;
 
     // This prevents from adding multiple thumbs in spectrum
-    if (opts.fromInput) {
+    if (opts.fromTarget) {
       colorEl.spectrum('set', valueClr);
       this.noneColor = value == 'none';
     }
@@ -46943,7 +46943,7 @@ module.exports = _backbone2.default.View.extend({
     }
 
     // Avoid target update if the changes comes from it
-    if (!opt.fromTarget) {
+    if (!opt.fromTarget || opt.fromTarget && opt.fromInput) {
       // The onChange is used by Composite/Stack properties, so I'd avoid sending
       // it back if the change comes from one of those
       if (onChange && !opt.fromParent) {

@@ -32649,8 +32649,7 @@ module.exports = Component.extend({
 
     Component.prototype.initToolbar.apply(this, args);
     var em = this.em;
-
-    if (em) {
+    if (em && this.get('type') === 'image') {
       var cmd = em.get('Commands');
       var cmdName = 'image-editor';
 

@@ -44684,8 +44684,8 @@ module.exports = function () {
           case 'border-radius-c':
           case 'border-top-left-radius':
           case 'border-top-right-radius':
-          case 'border-bottom-left-radius':
           case 'border-bottom-right-radius':
+          case 'border-bottom-left-radius':
           case 'border-width':
           case 'box-shadow-h':
           case 'box-shadow-v':
@@ -44761,8 +44761,8 @@ module.exports = function () {
           case 'border-radius-c':
           case 'border-top-left-radius':
           case 'border-top-right-radius':
-          case 'border-bottom-left-radius':
           case 'border-bottom-right-radius':
+          case 'border-bottom-left-radius':
           case 'box-shadow-h':
           case 'box-shadow-v':
           case 'box-shadow-spread':
@@ -44856,8 +44856,8 @@ module.exports = function () {
           case 'border-radius-c':
           case 'border-top-left-radius':
           case 'border-top-right-radius':
-          case 'border-bottom-left-radius':
           case 'border-bottom-right-radius':
+          case 'border-bottom-left-radius':
           case 'box-shadow-h':
           case 'box-shadow-v':
             obj.units = ['px', '%'];
@@ -44928,8 +44928,8 @@ module.exports = function () {
           case 'border-radius-c':
           case 'border-top-left-radius':
           case 'border-top-right-radius':
-          case 'border-bottom-left-radius':
           case 'border-bottom-right-radius':
+          case 'border-bottom-left-radius':
           case 'border-width':
           case 'box-shadow-blur':
           case 'transition-duration':
@@ -45063,7 +45063,7 @@ module.exports = function () {
             obj.properties = this.build(['border-width', 'border-style', 'border-color']);
             break;
           case 'border-radius':
-            obj.properties = this.build(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-left-radius', 'border-bottom-right-radius']);
+            obj.properties = this.build(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
             break;
           case 'box-shadow':
             obj.properties = this.build(['box-shadow-h', 'box-shadow-v', 'box-shadow-blur', 'box-shadow-spread', 'box-shadow-color', 'box-shadow-type']);

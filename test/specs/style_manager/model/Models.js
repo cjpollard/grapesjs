@@ -751,14 +751,14 @@ module.exports = {
               defaults: 0
             },
             {
-              property: 'border-bottom-left-radius',
+              property: 'border-bottom-right-radius',
               type: 'integer',
               units: ['px', '%'],
               min: 0,
               defaults: 0
             },
             {
-              property: 'border-bottom-right-radius',
+              property: 'border-bottom-left-radius',
               type: 'integer',
               units: ['px', '%'],
               min: 0,

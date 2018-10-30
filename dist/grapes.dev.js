@@ -25173,19 +25173,22 @@ module.exports = _backbone2.default.View.extend({
    * @private
    */
   renderBody: function renderBody() {
+    var config = this.config,
+        model = this.model;
+
     var wrap = this.model.get('frame').get('wrapper');
-    var em = this.config.em;
+    var em = config.em;
+
     if (wrap) {
+      var Canvas = em.get('Canvas');
       var ppfx = this.ppfx;
-      //var body = this.frame.$el.contents().find('body');
-      var body = $(this.frame.el.contentWindow.document.body);
+      var body = $(Canvas.getBody());
+      var head = $(Canvas.getDocument().head);
       var cssc = em.get('CssComposer');
       var conf = em.get('Config');
-      var confCanvas = this.config;
-      var protCss = conf.protectedCss;
       var externalStyles = '';
 
-      confCanvas.styles.forEach(function (style) {
+      config.styles.forEach(function (style) {
         externalStyles += '<link rel="stylesheet" href="' + style + '"/>';
       });
 
@@ -25199,10 +25202,10 @@ module.exports = _backbone2.default.View.extend({
       // `body {height: 100%;}`.
       // For the moment I give the priority to Firefox as it might be
       // CKEditor's issue
-      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 50px;\n          width: 50px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (protCss || '') + '\n      ';
+      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 50px;\n          width: 50px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (conf.protectedCss || '') + '\n      ';
 
       if (externalStyles) {
-        body.append(externalStyles);
+        head.append(externalStyles);
       }
 
       body.append('<style>' + frameCss + '</style>');
@@ -25363,7 +25366,7 @@ module.exports = _backbone2.default.View.extend({
     view.el.id = id;
     view.scriptContainer.html('');
     // In editor, I make use of setTimeout as during the append process of elements
-    // those will not be available immediatly, therefore 'item' variable
+    // those will not be available immediately, therefore 'item' variable
     var script = document.createElement('script');
     script.innerHTML = '\n        setTimeout(function() {\n          var item = document.getElementById(\'' + id + '\');\n          if (!item) return;\n          (function(){\n            ' + model.getScriptString() + ';\n          }.bind(item))()\n        }, 1);';
     // #873
@@ -25912,7 +25915,7 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
       return _this.compCls.push(model.getFullName());
     });
 
-    if ((!avoidInline || isWrapper) && style) {
+    if (!avoidInline && style) {
       var selector = '#' + model.getId();
       selector = wrappesIsBody && isWrapper ? 'body' : selector;
       code = selector + '{' + style + '}';
@@ -26483,7 +26486,7 @@ module.exports = function () {
       defaultCommands['core:redo'] = function (e) {
         return e.UndoManager.redo();
       };
-      [['copy', 'CopyComponent'], ['paste', 'PasteComponent'], ['component-next', 'ComponentNext'], ['component-prev', 'ComponentPrev'], ['component-enter', 'ComponentEnter'], ['component-exit', 'ComponentExit'], ['canvas-clear', 'CanvasClear'], ['component-delete', 'ComponentDelete']].forEach(function (item) {
+      [['copy', 'CopyComponent'], ['paste', 'PasteComponent'], ['component-next', 'ComponentNext'], ['component-prev', 'ComponentPrev'], ['component-enter', 'ComponentEnter'], ['component-exit', 'ComponentExit'], ['canvas-clear', 'CanvasClear'], ['component-delete', 'ComponentDelete'], ['component-style-clear', 'ComponentStyleClear']].forEach(function (item) {
         return defaultCommands['core:' + item[0]] = __webpack_require__("./src/commands/view sync recursive ^\\.\\/.*$")("./" + item[1]).run;
       });
 
@@ -26716,6 +26719,8 @@ var map = {
 	"./ComponentNext.js": "./src/commands/view/ComponentNext.js",
 	"./ComponentPrev": "./src/commands/view/ComponentPrev.js",
 	"./ComponentPrev.js": "./src/commands/view/ComponentPrev.js",
+	"./ComponentStyleClear": "./src/commands/view/ComponentStyleClear.js",
+	"./ComponentStyleClear.js": "./src/commands/view/ComponentStyleClear.js",
 	"./CopyComponent": "./src/commands/view/CopyComponent.js",
 	"./CopyComponent.js": "./src/commands/view/CopyComponent.js",
 	"./CreateComponent": "./src/commands/view/CreateComponent.js",
@@ -27021,6 +27026,7 @@ module.exports = {
       }
       if (component) {
         var coll = component.collection;
+        component.trigger('component:destroy');
         coll && coll.remove(component);
       }
     });
@@ -27140,6 +27146,49 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./src/commands/view/ComponentStyleClear.js":
+/*!**************************************************!*\
+  !*** ./src/commands/view/ComponentStyleClear.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
+module.exports = {
+  run: function run(ed, sender) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var target = opts.target;
+
+    var dc = ed.DomComponents;
+    var type = target.get('type');
+    var len = dc.getWrapper().find('[data-gjs-type="' + type + '"]').length;
+    var toRemove = [];
+
+    if (!len) {
+      var rules = ed.CssComposer.getAll();
+      var toClear = target.get('style-signature');
+      toClear = (0, _underscore.isArray)(toClear) ? toClear : [toClear];
+
+      rules.forEach(function (rule) {
+        var selector = rule.selectorsToString();
+        toClear.forEach(function (part) {
+          part && selector.indexOf(part) >= 0 && toRemove.push(rule);
+        });
+      });
+
+      rules.remove(toRemove);
+    }
+
+    return toRemove;
+  }
+};
+
+/***/ }),
+
 /***/ "./src/commands/view/CopyComponent.js":
 /*!********************************************!*\
   !*** ./src/commands/view/CopyComponent.js ***!
@@ -27198,7 +27247,7 @@ module.exports = _underscore2.default.extend({}, SelectPosition, {
 
 
   /**
-   * Start with enabling to select position and listening to start drawning
+   * Start with enabling to select position and listening to start drawing
    * @private
    * */
   enable: function enable() {
@@ -28635,7 +28684,16 @@ module.exports = {
   onHover: function onHover(e) {
     e.stopPropagation();
     var trg = e.target;
-    var model = $(trg).data('model');
+    var $el = $(trg);
+    var model = $el.data('model');
+
+    if (!model) {
+      var parent = $el.parent();
+      while (!model && parent) {
+        model = parent.data('model');
+        parent = parent.parent();
+      }
+    }
 
     // Adjust tools scroll top
     if (!this.adjScroll) {
@@ -28644,10 +28702,10 @@ module.exports = {
     }
 
     if (model && !model.get('hoverable')) {
-      var parent = model && model.parent();
-      while (parent && !parent.get('hoverable')) {
-        parent = parent.parent();
-      }model = parent;
+      var _parent = model && model.parent();
+      while (_parent && !_parent.get('hoverable')) {
+        _parent = _parent.parent();
+      }model = _parent;
     }
 
     this.em.setHovered(model, { forceChange: 1 });
@@ -28761,10 +28819,10 @@ module.exports = {
       if (model.get('selectable')) {
         this.select(model, e);
       } else {
-        var _parent = model.parent();
-        while (_parent && !_parent.get('selectable')) {
-          _parent = _parent.parent();
-        }this.select(_parent, e);
+        var _parent2 = model.parent();
+        while (_parent2 && !_parent2.get('selectable')) {
+          _parent2 = _parent2.parent();
+        }this.select(_parent2, e);
       }
     }
   },
@@ -28902,10 +28960,12 @@ module.exports = {
     // Get the selected model directly from the Editor as the event might
     // be triggered manually without the model
     var model = this.em.getSelected();
+    var view = model && model.view;
     this.updateToolbar(model);
 
-    if (model) {
-      var el = model.view.el;
+    if (view) {
+      var el = view.el;
+
       this.showFixedElementOffset(el);
       this.hideElementOffset();
       this.hideHighlighter();
@@ -29170,11 +29230,13 @@ module.exports = {
    */
   updateAttached: function updateAttached(updated) {
     var model = this.em.getSelected();
+    var view = model && model.view;
 
-    if (model) {
-      var view = model.view;
-      this.updateToolbarPos(view.el);
-      this.showFixedElementOffset(view.el);
+    if (view) {
+      var el = view.el;
+
+      this.updateToolbarPos(el);
+      this.showFixedElementOffset(el);
     }
   },
 
@@ -30181,9 +30243,13 @@ module.exports = _backbone2.default.Model.extend(_Styleable2.default).extend({
     var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     var result = [];
+    var em = this.em;
+
     var state = this.get('state');
+    var wrapper = this.get('wrapper');
     var addSelector = this.get('selectorsAdd');
-    var selectors = this.get('selectors').getFullString();
+    var isBody = wrapper && em && em.getConfig('wrappesIsBody');
+    var selectors = isBody ? 'body' : this.get('selectors').getFullString();
     var stateStr = state ? ':' + state : '';
     selectors && result.push('' + selectors + stateStr);
     addSelector && !opts.skipAdd && result.push(addSelector);
@@ -30937,9 +31003,11 @@ module.exports = {
   // Open assets manager on create of image component
   oAssetsOnCreate: true,
 
-  // TODO to remove
-  // Editor should also store the wrapper informations, but as this change might
-  // break stuff I set ii as an opt-in option, for now.
+  // Generally, if you don't edit the wrapper in the editor, like
+  // custom attributes, you don't need the wrapper stored in your JSON
+  // structure, but in case you need it you can use this option.
+  // If you have `config.avoidInlineStyle` disabled the wrapper will be stored
+  // as we need to store inlined style.
   storeWrapper: 0,
 
   // List of void elements
@@ -30985,7 +31053,14 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * @module DomComponents
                                                                                                                                                                                                                                                                    */
 
+
+var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
+
+var _backbone2 = _interopRequireDefault(_backbone);
+
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function () {
   var c = {};
@@ -31215,12 +31290,13 @@ module.exports = function () {
       var um = em.get('UndoManager');
       var handleUpdates = em.handleUpdates.bind(em);
       var handleChanges = this.handleChanges.bind(this);
+      var handleChangesColl = this.handleChangesColl.bind(this);
       var handleRemoves = this.handleRemoves.bind(this);
       um && um.add(model);
       um && comps && um.add(comps);
       var evn = 'change:style change:content change:attributes change:src';
 
-      [[model, evn, handleUpdates], [comps, 'add', handleChanges], [comps, 'remove', handleRemoves], [model.get('classes'), 'add remove', handleUpdates]].forEach(function (els) {
+      [[model, evn, handleUpdates], [model, 'change:components', handleChangesColl], [comps, 'add', handleChanges], [comps, 'remove', handleRemoves], [model.get('classes'), 'add remove', handleUpdates]].forEach(function (els) {
         em.stopListening(els[0], els[1], els[2]);
         em.listenTo(els[0], els[1], els[2]);
       });
@@ -31229,6 +31305,18 @@ module.exports = function () {
       comps.each(function (model) {
         return _this2.handleChanges(model, value, opts);
       });
+    },
+    handleChangesColl: function handleChangesColl(model, coll) {
+      var um = em.get('UndoManager');
+      if (um && coll instanceof _backbone2.default.Collection) {
+        var handleChanges = this.handleChanges.bind(this);
+        var handleRemoves = this.handleRemoves.bind(this);
+        um.add(coll);
+        [[coll, 'add', handleChanges], [coll, 'remove', handleRemoves]].forEach(function (els) {
+          em.stopListening(els[0], els[1], els[2]);
+          em.listenTo(els[0], els[1], els[2]);
+        });
+      }
     },
 
 
@@ -31283,11 +31371,10 @@ module.exports = function () {
 
       if (result && result.length || isObj) {
         this.clear();
-        this.getComponents().reset();
 
         // If the result is an object I consider it the wrapper
         if (isObj) {
-          this.getWrapper().set(result).initComponents().initClasses().loadTraits();
+          this.getWrapper().set(result);
         } else {
           this.getComponents().add(result);
         }
@@ -31315,7 +31402,11 @@ module.exports = function () {
       }
 
       if (keys.indexOf('components') >= 0) {
-        var toStore = c.storeWrapper ? this.getWrapper() : this.getComponents();
+        var _em = this.em;
+        // const storeWrap = (em && !em.getConfig('avoidInlineStyle')) || c.storeWrapper;
+
+        var storeWrap = c.storeWrapper;
+        var toStore = storeWrap ? this.getWrapper() : this.getComponents();
         obj.components = JSON.stringify(toStore);
       }
 
@@ -31504,7 +31595,7 @@ module.exports = function () {
       var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       if (component) {
-        var _em = this.em;
+        var _em2 = this.em;
 
         component.set({
           status: '',
@@ -31550,6 +31641,8 @@ module.exports = function () {
 "use strict";
 
 
+var _Backbone$Model$exten;
+
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
@@ -31563,6 +31656,8 @@ var _Styleable2 = _interopRequireDefault(_Styleable);
 var _constants = __webpack_require__(/*! constants */ "./node_modules/constants-browserify/constants.json");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -31584,7 +31679,7 @@ var avoidInline = function avoidInline(em) {
 
 /**
  * The Component object represents a single node of our template structure, so when you update its properties the changes are
- * immediatly reflected on the canvas and in the code to export (indeed, when you ask to export the code we just go through all
+ * immediately reflected on the canvas and in the code to export (indeed, when you ask to export the code we just go through all
  * the tree of nodes).
  * An example on how to update properties:
  * ```js
@@ -31615,6 +31710,7 @@ var avoidInline = function avoidInline(em) {
  * will be hidden from the style manager. Default: `true`
  * @property {Array<String>} [stylable-require=[]] Indicate an array of style properties to show up which has been marked as `toRequire`. Default: `[]`
  * @property {Array<String>} [unstylable=[]] Indicate an array of style properties which should be hidden from the style manager. Default: `[]`
+ * @property {Array<String>} [style-signature=''] This option comes handy when you need to remove or export strictly component-specific rules. Be default, if this option is not empty, the editor will remove rules when there are no components, of that type, in the canvas. Eg. '['.navbar', '[navbar-']'. Default: `''`
  * @property {Boolean} [highlightable=true] It can be highlighted with 'dotted' borders if true. Default: `true`
  * @property {Boolean} [copyable=true] True if it's possible to clone the component. Default: `true`
  * @property {Boolean} [resizable=false] Indicates if it's possible to resize the component. It's also possible to pass an object as [options for the Resizer](https://github.com/artf/grapesjs/blob/master/src/utils/Resizer.js). Default: `false`
@@ -31635,7 +31731,7 @@ var avoidInline = function avoidInline(em) {
  * By default, when `toolbar` property is falsy the editor will add automatically commands like `move`, `delete`, etc. based on its properties.
  * @property {Collection<Component>} [components=null] Children components. Default: `null`
  */
-var Component = Backbone.Model.extend(_Styleable2.default).extend({
+var Component = Backbone.Model.extend(_Styleable2.default).extend((_Backbone$Model$exten = {
   defaults: {
     tagName: 'div',
     type: '',
@@ -31646,6 +31742,7 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     badgable: true,
     stylable: true,
     'stylable-require': '',
+    'style-signature': '',
     unstylable: '',
     highlightable: true,
     copyable: true,
@@ -31705,14 +31802,13 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     this.config = opt.config || {};
     this.ccid = Component.createId(this);
     this.set('attributes', this.get('attributes') || {});
-    this.listenTo(this, 'change:script', this.scriptUpdated);
-    this.listenTo(this, 'change:traits', this.traitsUpdated);
-    this.listenTo(this, 'change:tagName', this.tagUpdated);
-    this.listenTo(this, 'change:attributes', this.attrUpdated);
     this.initClasses();
-    this.loadTraits();
+    this.initTraits();
     this.initComponents();
     this.initToolbar();
+    this.listenTo(this, 'change:script', this.scriptUpdated);
+    this.listenTo(this, 'change:tagName', this.tagUpdated);
+    this.listenTo(this, 'change:attributes', this.attrUpdated);
     this.set('status', '');
 
     // Register global updates for collection properties
@@ -31813,14 +31909,7 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
    * @private
    */
   attrUpdated: function attrUpdated() {
-    var _this2 = this;
-
-    var attrPrev = _extends({}, this.previous('attributes'));
-    var attrCurrent = _extends({}, this.get('attributes'));
-    var diff = (0, _mixins.shallowDiff)(attrPrev, attrCurrent);
-    (0, _underscore.keys)(diff).forEach(function (pr) {
-      return _this2.trigger('change:attributes:' + pr);
-    });
+    this.setAttributes(this.get('attributes'), { silent: 1 });
   },
 
 
@@ -31832,6 +31921,10 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
    * component.setAttributes({ id: 'test', 'data-key': 'value' });
    */
   setAttributes: function setAttributes(attrs) {
+    var _this2 = this;
+
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     attrs = _extends({}, attrs);
 
     // Handle classes
@@ -31844,7 +31937,12 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     style && this.setStyle(style);
     delete attrs.style;
 
-    this.set('attributes', attrs);
+    this.set('attributes', attrs, opts);
+    var attrPrev = _extends({}, this.previous('attributes'));
+    var diff = (0, _mixins.shallowDiff)(attrPrev, attrs);
+    (0, _underscore.keys)(diff).forEach(function (pr) {
+      return _this2.trigger('change:attributes:' + pr);
+    });
 
     return this;
   },
@@ -31901,8 +31999,10 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     var em = this.em;
+    var opt = this.opt;
 
-    if (em && em.getConfig('avoidInlineStyle')) {
+
+    if (em && em.getConfig('avoidInlineStyle') && !opt.temporary) {
       prop = (0, _underscore.isString)(prop) ? this.parseStyle(prop) : prop;
       prop = _extends({}, prop, this.get('style'));
       var state = this.get('state');
@@ -31935,8 +32035,8 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     var id = this.getId();
 
     // Add classes
-    this.get('classes').each(function (cls) {
-      return classes.push(cls.get('name'));
+    this.get('classes').forEach(function (cls) {
+      return classes.push((0, _underscore.isString)(cls) ? cls : cls.get('name'));
     });
     classes.length && (attributes.class = classes.join(' '));
 
@@ -32019,19 +32119,60 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
 
     return removed;
   },
+
+
+  /**
+   * Returns component's classes as an array of strings
+   * @return {Array}
+   */
+  getClasses: function getClasses() {
+    var attr = this.getAttributes();
+    var classStr = attr.class;
+    return classStr ? classStr.split(' ') : [];
+  },
   initClasses: function initClasses() {
     var addTypeToClasses = this.get('type') !== '' ? [this.get('type')] : [];
     var classes = this.normalizeClasses(this.get('classes') || addTypeToClasses);
-    this.set('classes', new Selectors(classes));
+    var event = 'change:classes';
+    var toListen = [this, event, this.initClasses];
+    this.stopListening.apply(this, toListen);
+    var selectors = new Selectors([]);
+    this.set('classes', selectors);
+    selectors.add(classes);
+    this.listenTo.apply(this, toListen);
     return this;
   },
   initComponents: function initComponents() {
+    var event = 'change:components';
+    var toListen = [this, event, this.initComponents];
+    this.stopListening.apply(this, toListen);
     // Have to add components after the init, otherwise the parent
     // is not visible
     var comps = new Components(null, this.opt);
     comps.parent = this;
-    !this.opt.avoidChildren && comps.reset(this.get('components'));
+    var components = this.get('components');
+    var addChild = !this.opt.avoidChildren;
     this.set('components', comps);
+    addChild && comps.add(components);
+    this.listenTo.apply(this, toListen);
+    return this;
+  },
+  initTraits: function initTraits() {
+    var event = 'change:traits';
+    var toListen = [this, event, this.initTraits];
+    this.stopListening.apply(this, toListen);
+    this.loadTraits();
+    var attrs = _extends({}, this.get('attributes'));
+    var traits = this.get('traits');
+    traits.each(function (trait) {
+      if (!trait.get('changeProp')) {
+        var name = trait.get('name');
+        var value = trait.getInitValue();
+        if (name && value) attrs[name] = value;
+      }
+    });
+    traits.length && this.set('attributes', attrs);
+    this.listenTo.apply(this, toListen);
     return this;
   },
   init: function init() {},
@@ -32103,35 +32244,6 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
    */
   scriptUpdated: function scriptUpdated() {
     this.set('scriptUpdated', 1);
-  },
-
-
-  /**
-   * Once traits are updated I have to populates model's attributes
-   * @private
-   */
-  traitsUpdated: function traitsUpdated() {
-    var found = 0;
-    var attrs = _extends({}, this.get('attributes'));
-    var traits = this.get('traits');
-
-    if (!(traits instanceof Traits)) {
-      this.loadTraits();
-      return;
-    }
-
-    traits.each(function (trait) {
-      found = 1;
-      if (!trait.get('changeProp')) {
-        var name = trait.get('name');
-        var value = trait.getInitValue();
-        if (name && value) {
-          attrs[name] = value;
-        }
-      }
-    });
-
-    found && this.set('attributes', attrs);
   },
 
 
@@ -32212,6 +32324,21 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
 
 
   /**
+   * Get the trait by id/name
+   * @param  {String} id The `id` or `name` of the trait
+   * @return {Trait} Trait model
+   * @example
+   * const traitTitle = component.getTrait('title');
+   * traitTitle && traitTitle.set('label', 'New label');
+   */
+  getTrait: function getTrait(id) {
+    return this.get('traits').filter(function (trait) {
+      return trait.get('id') === id || trait.get('name') === id;
+    })[0];
+  },
+
+
+  /**
    * Normalize input classes from array to array of objects
    * @param {Array} arr
    * @return {Array}
@@ -32272,302 +32399,177 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
     }
 
     return new this.constructor(attr, opts);
-  },
-  getClasses: function getClasses() {
-    var classes = [];
-    this.get('classes').each(function (md, i) {
-      classes[i] = md.get('name');
-    });
-    return classes;
-  },
-
-
-  /**
-   * Get the name of the component
-   * @return {String}
-   * */
-  getName: function getName() {
-    var customName = this.get('name') || this.get('custom-name');
-    var tag = this.get('tagName');
-    tag = tag == 'div' ? 'box' : tag;
-    var name = this.get('type') || tag;
-    name = name.charAt(0).toUpperCase() + name.slice(1);
-    return customName || name;
-  },
-
-
-  /**
-   * Get the icon string
-   * @return {String}
-   */
-  getIcon: function getIcon() {
-    var icon = this.get('icon');
-    return icon ? icon + ' ' : '';
-  },
-
-
-  /**
-   * Return HTML string of the component
-   * @param {Object} [opts={}] Options
-   * @param {Object|Function} [opts.attributes=null] You can pass an object of custom attributes to replace
-   * with the current one or you can even pass a function to generate attributes dynamically
-   * @return {String} HTML string
-   * @example
-   * // Simple HTML return
-   * component.set({ tagName: 'span' });
-   * component.setAttributes({ title: 'Hello' });
-   * component.toHTML();
-   * // -> <span title="Hello"></span>
-   *
-   * // Custom attributes
-   * component.toHTML({ attributes: { 'data-test': 'Hello' } });
-   * // -> <span data-test="Hello"></span>
-   *
-   * // Custom dynamic attributes
-   * component.toHTML({
-   *  attributes(component, attributes) {
-   *    if (component.get('tagName') == 'span') {
-   *      attributes.title = 'Custom attribute';
-   *    }
-   *    return attributes;
-   *  },
-   * });
-   * // -> <span title="Custom attribute"></span>
-   */
-  toHTML: function toHTML() {
-    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    var model = this;
-    var attrs = [];
-    var classes = [];
-    var tag = model.get('tagName');
-    var sTag = model.get('void');
-    var customAttr = opts.attributes;
-    var attributes = this.getAttrToHTML();
-
-    // Get custom attributes if requested
-    if (customAttr) {
-      if ((0, _underscore.isFunction)(customAttr)) {
-        attributes = customAttr(model, attributes) || {};
-      } else if ((0, _underscore.isObject)(customAttr)) {
-        attributes = customAttr;
-      }
-    }
-
-    for (var attr in attributes) {
-      var val = attributes[attr];
-      var value = (0, _underscore.isString)(val) ? val.replace(/"/g, '&quot;') : val;
-
-      if (!(0, _underscore.isUndefined)(value)) {
-        if ((0, _underscore.isBoolean)(value)) {
-          value && attrs.push(attr);
-        } else {
-          attrs.push(attr + '="' + value + '"');
-        }
-      }
-    }
-
-    var attrString = attrs.length ? ' ' + attrs.join(' ') : '';
-    var code = '<' + tag + attrString + (sTag ? '/' : '') + '>' + model.get('content');
-    model.get('components').each(function (comp) {
-      return code += comp.toHTML(opts);
-    });
-    !sTag && (code += '</' + tag + '>');
-
-    return code;
-  },
-
-
-  /**
-   * Returns object of attributes for HTML
-   * @return {Object}
-   * @private
-   */
-  getAttrToHTML: function getAttrToHTML() {
-    var attr = this.getAttributes();
-    delete attr.style;
-    return attr;
-  },
-
-
-  /**
-   * Return a shallow copy of the model's attributes for JSON
-   * stringification.
-   * @return {Object}
-   * @private
-   */
-  toJSON: function toJSON() {
-    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      args[_key2] = arguments[_key2];
-    }
-
-    var obj = Backbone.Model.prototype.toJSON.apply(this, args);
-    var scriptStr = this.getScriptString();
-    obj.attributes = this.getAttributes();
-    delete obj.attributes.class;
-    delete obj.toolbar;
-    scriptStr && (obj.script = scriptStr);
-
-    if (this.em.getConfig('avoidDefaults')) {
-      var defaults = (0, _underscore.result)(this, 'defaults');
-
-      (0, _underscore.forEach)(defaults, function (value, key) {
-        if (['type', 'content'].indexOf(key) === -1 && obj[key] === value) {
-          delete obj[key];
-        }
-      });
-
-      if ((0, _underscore.isEmpty)(obj.type)) {
-        delete obj.type;
-      }
-
-      (0, _underscore.forEach)(['attributes', 'style'], function (prop) {
-        if ((0, _underscore.isEmpty)(defaults[prop]) && (0, _underscore.isEmpty)(obj[prop])) {
-          delete obj[prop];
-        }
-      });
-
-      (0, _underscore.forEach)(['classes', 'components'], function (prop) {
-        if ((0, _underscore.isEmpty)(defaults[prop]) && !obj[prop].length) {
-          delete obj[prop];
-        }
-      });
-    }
-
-    return obj;
-  },
-
-
-  /**
-   * Return the component id
-   * @return {String}
-   */
-  getId: function getId() {
-    var attrs = this.get('attributes') || {};
-    return attrs.id || this.ccid || this.cid;
-  },
-
-
-  /**
-   * Set new id on the component
-   * @param {String} id
-   * @return {this}
-   */
-  setId: function setId(id) {
-    var attrs = _extends({}, this.get('attributes'));
-    attrs.id = id;
-    this.set('attributes', attrs);
-    return this;
-  },
-
-
-  /**
-   * Get the DOM element of the component. This works only of the
-   * component is already rendered
-   * @return {HTMLElement}
-   */
-  getEl: function getEl() {
-    return this.view && this.view.el;
-  },
-
-
-  /**
-   * Return script in string format, cleans 'function() {..' from scripts
-   * if it's a function
-   * @param {string|Function} script
-   * @return {string}
-   * @private
-   */
-  getScriptString: function getScriptString(script) {
-    var _this4 = this;
-
-    var scr = script || this.get('script');
-
-    if (!scr) {
-      return scr;
-    }
-
-    // Need to convert script functions to strings
-    if (typeof scr == 'function') {
-      var scrStr = scr.toString().trim();
-      scrStr = scrStr.replace(/^function[\s\w]*\(\)\s?\{/, '').replace(/\}$/, '');
-      scr = scrStr.trim();
-    }
-
-    var config = this.em.getConfig();
-    var tagVarStart = escapeRegExp(config.tagVarStart || '{[ ');
-    var tagVarEnd = escapeRegExp(config.tagVarEnd || ' ]}');
-    var reg = new RegExp(tagVarStart + '([\\w\\d-]*)' + tagVarEnd, 'g');
-    scr = scr.replace(reg, function (match, v) {
-      // If at least one match is found I have to track this change for a
-      // better optimization inside JS generator
-      _this4.scriptUpdated();
-      return _this4.attributes[v] || '';
-    });
-
-    return scr;
-  },
-  emitUpdate: function emitUpdate(property) {
-    var em = this.em;
-    var event = 'component:update' + (property ? ':' + property : '');
-
-    for (var _len3 = arguments.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-      args[_key3 - 1] = arguments[_key3];
-    }
-
-    em && em.trigger.apply(em, [event, this].concat(_toConsumableArray(args)));
-  },
-
-
-  /**
-   * Execute callback function on itself and all inner components
-   * @param  {Function} clb Callback function, the model is passed as an argument
-   * @return {this}
-   * @example
-   * component.onAll(component => {
-   *  // do something with component
-   * })
-   */
-  onAll: function onAll(clb) {
-    if ((0, _underscore.isFunction)(clb)) {
-      clb(this);
-      this.components().forEach(function (model) {
-        return model.onAll(clb);
-      });
-    }
-    return this;
-  },
-
-
-  /**
-   * Remove the component
-   * @return {this}
-   */
-  remove: function remove() {
-    return this.collection.remove(this);
-  },
-
-
-  /**
-   * Reset id of the component and any of its style rule
-   * @param {Object} [opts={}] Options
-   * @return {this}
-   * @private
-   */
-  resetId: function resetId() {
-    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var em = this.em;
-
-    var oldId = this.getId();
-    if (!oldId) return;
-    var newId = Component.createId(this);
-    this.setId(newId);
-    var rule = em && em.get('CssComposer').getIdRule(oldId);
-    var selector = rule && rule.get('selectors').at(0);
-    selector && selector.set('name', newId);
-    return this;
   }
-}, {
+}, _defineProperty(_Backbone$Model$exten, 'getClasses', function getClasses() {
+  var classes = [];
+  this.get('classes').each(function (md, i) {
+    classes[i] = md.get('name');
+  });
+  return classes;
+}), _defineProperty(_Backbone$Model$exten, 'getName', function getName() {
+  var customName = this.get('name') || this.get('custom-name');
+  var tag = this.get('tagName');
+  tag = tag == 'div' ? 'box' : tag;
+  var name = this.get('type') || tag;
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+  return customName || name;
+}), _defineProperty(_Backbone$Model$exten, 'getIcon', function getIcon() {
+  var icon = this.get('icon');
+  return icon ? icon + ' ' : '';
+}), _defineProperty(_Backbone$Model$exten, 'toHTML', function toHTML() {
+  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  var model = this;
+  var attrs = [];
+  var classes = [];
+  var tag = model.get('tagName');
+  var sTag = model.get('void');
+  var customAttr = opts.attributes;
+  var attributes = this.getAttrToHTML();
+
+  // Get custom attributes if requested
+  if (customAttr) {
+    if ((0, _underscore.isFunction)(customAttr)) {
+      attributes = customAttr(model, attributes) || {};
+    } else if ((0, _underscore.isObject)(customAttr)) {
+      attributes = customAttr;
+    }
+  }
+
+  for (var attr in attributes) {
+    var val = attributes[attr];
+    var value = (0, _underscore.isString)(val) ? val.replace(/"/g, '&quot;') : val;
+
+    if (!(0, _underscore.isUndefined)(value)) {
+      if ((0, _underscore.isBoolean)(value)) {
+        value && attrs.push(attr);
+      } else {
+        attrs.push(attr + '="' + value + '"');
+      }
+    }
+  }
+
+  var attrString = attrs.length ? ' ' + attrs.join(' ') : '';
+  var code = '<' + tag + attrString + (sTag ? '/' : '') + '>' + model.get('content');
+  model.get('components').each(function (comp) {
+    return code += comp.toHTML(opts);
+  });
+  !sTag && (code += '</' + tag + '>');
+
+  return code;
+}), _defineProperty(_Backbone$Model$exten, 'getAttrToHTML', function getAttrToHTML() {
+  var attr = this.getAttributes();
+  delete attr.style;
+  return attr;
+}), _defineProperty(_Backbone$Model$exten, 'toJSON', function toJSON() {
+  for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    args[_key2] = arguments[_key2];
+  }
+
+  var obj = Backbone.Model.prototype.toJSON.apply(this, args);
+  var scriptStr = this.getScriptString();
+  obj.attributes = this.getAttributes();
+  delete obj.attributes.class;
+  delete obj.toolbar;
+  scriptStr && (obj.script = scriptStr);
+
+  if (this.em.getConfig('avoidDefaults')) {
+    var defaults = (0, _underscore.result)(this, 'defaults');
+
+    (0, _underscore.forEach)(defaults, function (value, key) {
+      if (['type', 'content'].indexOf(key) === -1 && obj[key] === value) {
+        delete obj[key];
+      }
+    });
+
+    if ((0, _underscore.isEmpty)(obj.type)) {
+      delete obj.type;
+    }
+
+    (0, _underscore.forEach)(['attributes', 'style'], function (prop) {
+      if ((0, _underscore.isEmpty)(defaults[prop]) && (0, _underscore.isEmpty)(obj[prop])) {
+        delete obj[prop];
+      }
+    });
+
+    (0, _underscore.forEach)(['classes', 'components'], function (prop) {
+      if ((0, _underscore.isEmpty)(defaults[prop]) && !obj[prop].length) {
+        delete obj[prop];
+      }
+    });
+  }
+
+  return obj;
+}), _defineProperty(_Backbone$Model$exten, 'getId', function getId() {
+  var attrs = this.get('attributes') || {};
+  return attrs.id || this.ccid || this.cid;
+}), _defineProperty(_Backbone$Model$exten, 'setId', function setId(id) {
+  var attrs = _extends({}, this.get('attributes'));
+  attrs.id = id;
+  this.set('attributes', attrs);
+  return this;
+}), _defineProperty(_Backbone$Model$exten, 'getEl', function getEl() {
+  return this.view && this.view.el;
+}), _defineProperty(_Backbone$Model$exten, 'getScriptString', function getScriptString(script) {
+  var _this4 = this;
+
+  var scr = script || this.get('script');
+
+  if (!scr) {
+    return scr;
+  }
+
+  // Need to convert script functions to strings
+  if (typeof scr == 'function') {
+    var scrStr = scr.toString().trim();
+    scrStr = scrStr.replace(/^function[\s\w]*\(\)\s?\{/, '').replace(/\}$/, '');
+    scr = scrStr.trim();
+  }
+
+  var config = this.em.getConfig();
+  var tagVarStart = escapeRegExp(config.tagVarStart || '{[ ');
+  var tagVarEnd = escapeRegExp(config.tagVarEnd || ' ]}');
+  var reg = new RegExp(tagVarStart + '([\\w\\d-]*)' + tagVarEnd, 'g');
+  scr = scr.replace(reg, function (match, v) {
+    // If at least one match is found I have to track this change for a
+    // better optimization inside JS generator
+    _this4.scriptUpdated();
+    return _this4.attributes[v] || '';
+  });
+
+  return scr;
+}), _defineProperty(_Backbone$Model$exten, 'emitUpdate', function emitUpdate(property) {
+  var em = this.em;
+  var event = 'component:update' + (property ? ':' + property : '');
+
+  for (var _len3 = arguments.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+    args[_key3 - 1] = arguments[_key3];
+  }
+
+  em && em.trigger.apply(em, [event, this].concat(_toConsumableArray(args)));
+}), _defineProperty(_Backbone$Model$exten, 'onAll', function onAll(clb) {
+  if ((0, _underscore.isFunction)(clb)) {
+    clb(this);
+    this.components().forEach(function (model) {
+      return model.onAll(clb);
+    });
+  }
+  return this;
+}), _defineProperty(_Backbone$Model$exten, 'remove', function remove() {
+  return this.collection.remove(this);
+}), _defineProperty(_Backbone$Model$exten, 'resetId', function resetId() {
+  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var em = this.em;
+
+  var oldId = this.getId();
+  if (!oldId) return;
+  var newId = Component.createId(this);
+  this.setId(newId);
+  var rule = em && em.get('CssComposer').getIdRule(oldId);
+  var selector = rule && rule.get('selectors').at(0);
+  selector && selector.set('name', newId);
+  return this;
+}), _Backbone$Model$exten), {
   /**
    * Detect if the passed element is a valid component.
    * In case the element is valid an object abstracted
@@ -33756,6 +33758,8 @@ module.exports = _Component2.default.extend({}, {
 "use strict";
 
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
 var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
@@ -33791,32 +33795,46 @@ module.exports = Backbone.Collection.extend({
       return new model(attrs, options);
     };
   },
+  parseString: function parseString(value) {
+    var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var em = this.em;
+
+    var cssc = em.get('CssComposer');
+    var parsed = em.get('Parser').parseHtml(value);
+
+    if (parsed.css && cssc && !opt.temporary) {
+      cssc.addCollection(parsed.css, _extends({}, opt, {
+        extend: 1
+      }));
+    }
+
+    return parsed.html;
+  },
   add: function add(models) {
+    var _this = this;
+
     var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    if (typeof models === 'string') {
-      var cssc = this.em.get('CssComposer');
-      var parsed = this.em.get('Parser').parseHtml(models);
-      models = parsed.html;
-
-      if (parsed.css && cssc) {
-        var avoidUpdateStyle = opt.avoidUpdateStyle;
-
-        var added = cssc.addCollection(parsed.css, {
-          extend: 1,
-          avoidUpdateStyle: avoidUpdateStyle
-        });
-      }
+    if ((0, _underscore.isString)(models)) {
+      models = this.parseString(models, opt);
+    } else if ((0, _underscore.isArray)(models)) {
+      models.forEach(function (item, index) {
+        if ((0, _underscore.isString)(item)) {
+          models[index] = _this.parseString(item);
+        }
+      });
     }
 
     return Backbone.Collection.prototype.add.apply(this, [models, opt]);
   },
-  onAdd: function onAdd(model, c, opts) {
+  onAdd: function onAdd(model, c) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
     var em = this.em;
     var style = model.getStyle();
     var avoidInline = em && em.getConfig('avoidInlineStyle');
 
-    if (!(0, _underscore.isEmpty)(style) && !avoidInline && em && em.get && em.getConfig('forceClass')) {
+    if (!(0, _underscore.isEmpty)(style) && !avoidInline && em && em.get && em.getConfig('forceClass') && !opts.temporary) {
       var name = model.cid;
       var rule = em.get('CssComposer').setClassRule(name, style);
       model.setStyle({});
@@ -33875,7 +33893,8 @@ module.exports = Backbone.Model.extend({
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
 var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
 
 module.exports = ComponentView.extend({
@@ -33912,7 +33931,7 @@ module.exports = ComponentView.extend({
         dataTransfer: { files: [file] }
       }, function (res) {
         var obj = res && res.data && res.data[0];
-        var src = obj && obj.src;
+        var src = obj && ((0, _underscore.isString)(obj) ? obj : obj.src);
         src && model.set({ src: src });
       });
       model.set('file', '');
@@ -34577,6 +34596,8 @@ module.exports = ComponentView.extend({
 "use strict";
 
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 
 var _backbone2 = _interopRequireDefault(_backbone);
@@ -34585,7 +34606,9 @@ var _underscore = __webpack_require__(/*! underscore */ "./node_modules/undersco
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var Components = __webpack_require__(/*! ../model/Components */ "./src/dom_components/model/Components.js");
 var ComponentsView = __webpack_require__(/*! ./ComponentsView */ "./src/dom_components/view/ComponentsView.js");
+var Selectors = __webpack_require__(/*! selector_manager/model/Selectors */ "./src/selector_manager/model/Selectors.js");
 
 module.exports = _backbone2.default.View.extend({
   className: function className() {
@@ -34607,9 +34630,8 @@ module.exports = _backbone2.default.View.extend({
     this.attr = model.get('attributes');
     this.classe = this.attr.class || [];
     var $el = this.$el;
-    var classes = model.get('classes');
     this.listenTo(model, 'change:style', this.updateStyle);
-    this.listenTo(model, 'change:attributes', this.updateAttributes);
+    this.listenTo(model, 'change:attributes', this.renderAttributes);
     this.listenTo(model, 'change:highlightable', this.updateHighlight);
     this.listenTo(model, 'change:status', this.updateStatus);
     this.listenTo(model, 'change:state', this.updateState);
@@ -34617,11 +34639,10 @@ module.exports = _backbone2.default.View.extend({
     this.listenTo(model, 'change:content', this.updateContent);
     this.listenTo(model, 'change', this.handleChange);
     this.listenTo(model, 'active', this.onActive);
-    this.listenTo(classes, 'add remove change', this.updateClasses);
     $el.data('model', model);
-    $el.data('collection', model.get('components'));
     model.view = this;
-    classes.length && this.importClasses();
+    this.initClasses();
+    this.initComponents({ avoidRender: 1 });
     this.init();
   },
 
@@ -34636,6 +34657,37 @@ module.exports = _backbone2.default.View.extend({
    * Callback executed when the `active` event is triggered on component
    */
   onActive: function onActive() {},
+  initClasses: function initClasses() {
+    var model = this.model;
+
+    var event = 'change:classes';
+    var classes = model.get('classes');
+
+    if (classes instanceof Selectors) {
+      this.stopListening(model, event, this.initClasses);
+      this.listenTo(model, event, this.initClasses);
+      this.listenTo(classes, 'add remove change', this.updateClasses);
+      classes.length && this.importClasses();
+    }
+  },
+  initComponents: function initComponents() {
+    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var model = this.model,
+        $el = this.$el,
+        childrenView = this.childrenView;
+
+    var event = 'change:components';
+    var comps = model.get('components');
+    var toListen = [model, event, this.initComponents];
+
+    if (comps instanceof Components) {
+      $el.data('collection', comps);
+      childrenView && childrenView.remove();
+      this.stopListening.apply(this, toListen);
+      !opts.avoidRender && this.renderChildren();
+      this.listenTo.apply(this, toListen);
+    }
+  },
 
 
   /**
@@ -34789,15 +34841,7 @@ module.exports = _backbone2.default.View.extend({
    * @private
    * */
   getClasses: function getClasses() {
-    var attr = this.model.get('attributes'),
-        classes = attr['class'] || [];
-    classes = (0, _underscore.isArray)(classes) ? classes : [classes];
-
-    if (classes.length) {
-      return classes.join(' ');
-    } else {
-      return null;
-    }
+    return this.model.getClasses().join(' ');
   },
 
 
@@ -34807,17 +34851,11 @@ module.exports = _backbone2.default.View.extend({
    * */
   updateAttributes: function updateAttributes() {
     var model = this.model;
-    var attrs = { 'data-gjs-type': model.get('type') || 'default' };
-    var attr = model.get('attributes');
-    var src = model.get('src');
-
-    for (var key in attr) {
-      attrs[key] = attr[key];
-    }
-
-    src && (attrs.src = src);
-    this.$el.attr(attrs);
-    this.updateHighlight();
+    var defaultAttr = {
+      'data-gjs-type': model.get('type') || 'default',
+      'data-highlightable': model.get('highlightable') ? 1 : ''
+    };
+    this.$el.attr(_extends({}, defaultAttr, model.getAttributes()));
     this.updateStyle();
   },
 
@@ -34900,6 +34938,7 @@ module.exports = _backbone2.default.View.extend({
    * @private
    */
   renderChildren: function renderChildren() {
+    this.updateContent();
     var container = this.getChildrenContainer();
     var view = new ComponentsView({
       collection: this.model.get('components'),
@@ -34914,23 +34953,6 @@ module.exports = _backbone2.default.View.extend({
     for (var i = 0, len = childNodes.length; i < len; i++) {
       container.appendChild(childNodes.shift());
     }
-
-    // If the children container is not the same as the component
-    // (so likely fetched with getChildrenSelector()) is necessary
-    // to disable pointer-events for all nested components as they
-    // might prevent the component to be selected
-    if (container !== this.el) {
-      var disableNode = function disableNode(el) {
-        var children = Array.prototype.slice.call(el.children);
-        children.forEach(function (el) {
-          el.style['pointer-events'] = 'none';
-          if (container !== el) {
-            disableNode(el);
-          }
-        });
-      };
-      disableNode(this.el);
-    }
   },
   renderAttributes: function renderAttributes() {
     this.updateAttributes();
@@ -34938,7 +34960,6 @@ module.exports = _backbone2.default.View.extend({
   },
   render: function render() {
     this.renderAttributes();
-    this.updateContent();
     this.renderChildren();
     this.updateScript();
     this.onRender();
@@ -34983,7 +35004,10 @@ module.exports = _backbone2.default.View.extend({
     view.remove.apply(view);
     var children = view.childrenView;
     children && children.stopListening();
-    em && em.trigger('component:remove', removed);
+    if (em) {
+      removed.get('style-signature') && em.get('Commands').run('core:component-style-clear', { target: removed });
+      em.trigger('component:remove', removed);
+    }
   },
 
 
@@ -35318,6 +35342,9 @@ exports.default = {
     }
 
     return result.join('');
+  },
+  getSelectors: function getSelectors() {
+    return this.get('selectors') || this.get('classes');
   }
 };
 
@@ -35336,6 +35363,9 @@ exports.default = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
 var Model = Backbone.Model;
 var View = Backbone.View;
 
@@ -35462,8 +35492,8 @@ exports.default = {
         view = definition.view,
         isType = definition.isType;
 
-    model = model instanceof Model ? model : ModelInst.extend(model || {});
-    view = view instanceof View ? view : ViewInst.extend(view || {});
+    model = model instanceof Model || (0, _underscore.isFunction)(model) ? model : ModelInst.extend(model || {});
+    view = view instanceof View || (0, _underscore.isFunction)(view) ? view : ViewInst.extend(view || {});
 
     if (type) {
       type.model = model;
@@ -35576,6 +35606,7 @@ module.exports = Backbone.View.extend({
     return this.inputEl.get(0);
   },
   render: function render() {
+    this.inputEl = null;
     var el = this.$el;
     el.addClass(this.inputClass());
     el.html(this.template());
@@ -36014,6 +36045,7 @@ module.exports = Input.extend({
   },
   render: function render() {
     Input.prototype.render.call(this);
+    this.unitEl = null;
     var unit = this.getUnitEl();
     unit && this.$el.find('.' + this.ppfx + 'field-units').get(0).appendChild(unit);
     return this;
@@ -36136,6 +36168,11 @@ module.exports = {
 
   // Width for the editor container
   width: '100%',
+
+  // Type of logs to print with the logger (by default is used the devtool console).
+  // Available by default: debug, info, warning, error
+  // You can use `false` to disable all of them or `true` to print all of them
+  log: ['warning', 'error'],
 
   // By default Grapes injects base CSS into the canvas. For example, it sets body margin to 0
   // and sets a default background color of white. This CSS is desired in most cases.
@@ -36539,11 +36576,20 @@ module.exports = function (config) {
 
 
     /**
-     * Returns components in JSON format object
-     * @return {Object}
+     * Return the complete tree of components. Use `getWrapper` to include also the wrapper
+     * @return {Components}
      */
     getComponents: function getComponents() {
       return em.get('DomComponents').getComponents();
+    },
+
+
+    /**
+     * Return the wrapper and its all components
+     * @return {Component}
+     */
+    getWrapper: function getWrapper() {
+      return em.get('DomComponents').getWrapper();
     },
 
 
@@ -36912,6 +36958,18 @@ module.exports = function (config) {
 
 
     /**
+     * Attach event and detach it after the first run
+     * @param  {string} event Event name
+     * @param  {Function} callback Callback function
+     * @return {this}
+     */
+    once: function once(event, callback) {
+      em.once(event, callback);
+      return this;
+    },
+
+
+    /**
      * Detach event
      * @param  {string} event Event name
      * @param  {Function} callback Callback function
@@ -37031,6 +37089,7 @@ module.exports = function (config) {
     * * `keymap:emit` - Some keymap emitted, in arguments you get keymapId, shortcutUsed, Event
     * * `keymap:emit:{keymapId}` - `keymapId` emitted, in arguments you get keymapId, shortcutUsed, Event
     * ### Style Manager
+    * * `styleManager:update:target` - The target (Component or CSSRule) is changed
     * * `styleManager:change` - Triggered on style property change from new selected component, the view of the property is passed as an argument to the callback
     * * `styleManager:change:{propertyName}` - As above but for a specific style property
     * ### Storages
@@ -37090,7 +37149,7 @@ var _underscore = __webpack_require__(/*! underscore */ "./node_modules/undersco
 
 var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 
-var deps = [__webpack_require__(/*! utils */ "./src/utils/index.js"), __webpack_require__(/*! keymaps */ "./src/keymaps/index.js"), __webpack_require__(/*! undo_manager */ "./src/undo_manager/index.js"), __webpack_require__(/*! storage_manager */ "./src/storage_manager/index.js"), __webpack_require__(/*! device_manager */ "./src/device_manager/index.js"), __webpack_require__(/*! parser */ "./src/parser/index.js"), __webpack_require__(/*! selector_manager */ "./src/selector_manager/index.js"), __webpack_require__(/*! modal_dialog */ "./src/modal_dialog/index.js"), __webpack_require__(/*! code_manager */ "./src/code_manager/index.js"), __webpack_require__(/*! panels */ "./src/panels/index.js"), __webpack_require__(/*! rich_text_editor */ "./src/rich_text_editor/index.js"), __webpack_require__(/*! style_manager */ "./src/style_manager/index.js"), __webpack_require__(/*! asset_manager */ "./src/asset_manager/index.js"), __webpack_require__(/*! css_composer */ "./src/css_composer/index.js"), __webpack_require__(/*! trait_manager */ "./src/trait_manager/index.js"), __webpack_require__(/*! dom_components */ "./src/dom_components/index.js"), __webpack_require__(/*! navigator */ "./src/navigator/index.js"), __webpack_require__(/*! canvas */ "./src/canvas/index.js"), __webpack_require__(/*! commands */ "./src/commands/index.js"), __webpack_require__(/*! block_manager */ "./src/block_manager/index.js")];
+var deps = [__webpack_require__(/*! utils */ "./src/utils/index.js"), __webpack_require__(/*! keymaps */ "./src/keymaps/index.js"), __webpack_require__(/*! undo_manager */ "./src/undo_manager/index.js"), __webpack_require__(/*! storage_manager */ "./src/storage_manager/index.js"), __webpack_require__(/*! device_manager */ "./src/device_manager/index.js"), __webpack_require__(/*! parser */ "./src/parser/index.js"), __webpack_require__(/*! style_manager */ "./src/style_manager/index.js"), __webpack_require__(/*! selector_manager */ "./src/selector_manager/index.js"), __webpack_require__(/*! modal_dialog */ "./src/modal_dialog/index.js"), __webpack_require__(/*! code_manager */ "./src/code_manager/index.js"), __webpack_require__(/*! panels */ "./src/panels/index.js"), __webpack_require__(/*! rich_text_editor */ "./src/rich_text_editor/index.js"), __webpack_require__(/*! asset_manager */ "./src/asset_manager/index.js"), __webpack_require__(/*! css_composer */ "./src/css_composer/index.js"), __webpack_require__(/*! trait_manager */ "./src/trait_manager/index.js"), __webpack_require__(/*! dom_components */ "./src/dom_components/index.js"), __webpack_require__(/*! navigator */ "./src/navigator/index.js"), __webpack_require__(/*! canvas */ "./src/canvas/index.js"), __webpack_require__(/*! commands */ "./src/commands/index.js"), __webpack_require__(/*! block_manager */ "./src/block_manager/index.js")];
 
 var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 var Collection = Backbone.Collection;
@@ -37103,6 +37162,12 @@ __webpack_require__(/*! utils/extender */ "./src/utils/extender.js")({
 });
 
 var $ = Backbone.$;
+var logs = {
+  debug: console.log,
+  info: console.info,
+  warning: console.warn,
+  error: console.error
+};
 
 module.exports = Backbone.Model.extend({
   defaults: function defaults() {
@@ -37132,6 +37197,8 @@ module.exports = Backbone.Model.extend({
     this.set('toLoad', []);
     this.set('storables', []);
     var el = c.el;
+    var log = c.log;
+    var toLog = log === true ? (0, _underscore.keys)(logs) : (0, _underscore.isArray)(log) ? log : [];
 
     if (el && c.fromElement) this.config.components = el.innerHTML;
     this.attrsOrig = el ? (0, _underscore.toArray)(el.attributes).reduce(function (res, next) {
@@ -37145,6 +37212,9 @@ module.exports = Backbone.Model.extend({
     });
     this.on('change:componentHovered', this.componentHovered, this);
     this.on('change:changesCount', this.updateChanges, this);
+    toLog.forEach(function (e) {
+      return _this.listenLog(e);
+    });
 
     // Deprecations
     [{ from: 'change:selectedComponent', to: 'component:toggled' }].forEach(function (event) {
@@ -37156,9 +37226,12 @@ module.exports = Backbone.Model.extend({
         }
 
         _this.trigger.apply(_this, [eventTo].concat(args));
-        console.warn('The event \'' + eventFrom + '\' is deprecated, replace it with \'' + eventTo + '\'');
+        _this.logWarning('The event \'' + eventFrom + '\' is deprecated, replace it with \'' + eventTo + '\'');
       });
     });
+  },
+  listenLog: function listenLog(event) {
+    this.listenTo(this, 'log:' + event, logs[event]);
   },
 
 
@@ -42305,7 +42378,7 @@ var Selector = Backbone.Model.extend({
    * @private
    */
   escapeName: function escapeName(name) {
-    return ('' + name).trim().replace(/([^a-z0-9\w-]+)/gi, '-');
+    return ('' + name).trim().replace(/([^a-z0-9\w-\:]+)/gi, '-');
   }
 });
 
@@ -42386,7 +42459,7 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     this.coll = o.coll || null;
     this.pfx = this.config.stylePrefix || '';
     this.ppfx = this.config.pStylePrefix || '';
-    this.target = this.config.em;
+    this.em = this.config.em;
     this.listenTo(this.model, 'change:active', this.updateStatus);
   },
 
@@ -42409,9 +42482,12 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
    * @private
    */
   startEditTag: function startEditTag() {
+    var em = this.em;
+
     var inputEl = this.getInputEl();
     inputEl[inputProp] = true;
     inputEl.focus();
+    em && em.setEditing(1);
   },
 
 
@@ -42425,9 +42501,10 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     var inputEl = this.getInputEl();
     var label = inputEl.textContent;
     var name = Selector.escapeName(label);
-    var em = this.target;
+    var em = this.em;
     var sm = em && em.get('SelectorManager');
     inputEl[inputProp] = false;
+    em && em.setEditing(0);
 
     if (sm) {
       if (sm.get(name)) {
@@ -42454,18 +42531,14 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
    * @private
    */
   removeTag: function removeTag(e) {
-    var _this = this;
+    var em = this.em,
+        model = this.model;
 
-    var em = this.target;
-    var model = this.model;
-    var coll = this.coll;
-    var el = this.el;
     var sel = em && em.getSelected();
-    sel && sel.get & sel.get('classes').remove(model);
-    coll && coll.remove(model);
-    setTimeout(function () {
-      return _this.remove();
-    }, 0);
+    // Prevent weird erros on remove
+    sel && setTimeout(function () {
+      return sel.getSelectors().remove(model);
+    });
   },
 
 
@@ -42511,8 +42584,6 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
-var _underscore2 = _interopRequireDefault(_underscore);
-
 var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 
 var _backbone2 = _interopRequireDefault(_backbone);
@@ -42522,7 +42593,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var ClassTagView = __webpack_require__(/*! ./ClassTagView */ "./src/selector_manager/view/ClassTagView.js");
 
 module.exports = _backbone2.default.View.extend({
-  template: _underscore2.default.template('\n  <div id="<%= pfx %>up">\n    <div id="<%= pfx %>label"><%= label %></div>\n    <div id="<%= pfx %>status-c">\n      <span id="<%= pfx %>input-c">\n        <div class="<%= ppfx %>field <%= ppfx %>select">\n          <span id="<%= ppfx %>input-holder">\n            <select id="<%= pfx %>states">\n              <option value=""><%= statesLabel %></option>\n            </select>\n          </span>\n          <div class="<%= ppfx %>sel-arrow">\n            <div class="<%= ppfx %>d-s-arrow"></div>\n          </div>\n        </div>\n      </span>\n    </div>\n  </div>\n  <div id="<%= pfx %>tags-field" class="<%= ppfx %>field">\n    <div id="<%= pfx %>tags-c"></div>\n    <input id="<%= pfx %>new" />\n    <span id="<%= pfx %>add-tag" class="fa fa-plus"></span>\n  </div>\n  <div id="<%= pfx %>sel-help">\n    <div id="<%= pfx %>label"><%= selectedLabel %></div>\n    <div id="<%= pfx %>sel"></div>\n    <div style="clear:both"></div>\n  </div>'),
+  template: (0, _underscore.template)('\n  <div id="<%= pfx %>up">\n    <div id="<%= pfx %>label"><%= label %></div>\n    <div id="<%= pfx %>status-c">\n      <span id="<%= pfx %>input-c">\n        <div class="<%= ppfx %>field <%= ppfx %>select">\n          <span id="<%= ppfx %>input-holder">\n            <select id="<%= pfx %>states">\n              <option value=""><%= statesLabel %></option>\n            </select>\n          </span>\n          <div class="<%= ppfx %>sel-arrow">\n            <div class="<%= ppfx %>d-s-arrow"></div>\n          </div>\n        </div>\n      </span>\n    </div>\n  </div>\n  <div id="<%= pfx %>tags-field" class="<%= ppfx %>field">\n    <div id="<%= pfx %>tags-c"></div>\n    <input id="<%= pfx %>new" />\n    <span id="<%= pfx %>add-tag" class="fa fa-plus"></span>\n  </div>\n  <div id="<%= pfx %>sel-help">\n    <div id="<%= pfx %>label"><%= selectedLabel %></div>\n    <div id="<%= pfx %>sel"></div>\n    <div style="clear:both"></div>\n  </div>'),
 
   events: {},
 
@@ -42546,7 +42617,8 @@ module.exports = _backbone2.default.View.extend({
     this.target = this.config.em;
     this.em = this.target;
 
-    this.listenTo(this.target, 'component:toggled', this.componentChanged);
+    this.listenTo(this.getStyleEmitter(), 'styleManager:update', this.componentChanged);
+    this.listenTo(this.target, 'component:toggled component:update:classes', this.componentChanged);
     this.listenTo(this.target, 'component:update:classes', this.updateSelector);
 
     this.listenTo(this.collection, 'add', this.addNew);
@@ -42554,6 +42626,13 @@ module.exports = _backbone2.default.View.extend({
     this.listenTo(this.collection, 'remove', this.tagRemoved);
 
     this.delegateEvents();
+  },
+  getStyleEmitter: function getStyleEmitter() {
+    var em = this.em;
+
+    var sm = em && em.get('StyleManager');
+    var emitter = sm && sm.getEmitter();
+    return emitter || {};
   },
 
 
@@ -42628,18 +42707,24 @@ module.exports = _backbone2.default.View.extend({
    * @param  {Object} e
    * @private
    */
-  componentChanged: function componentChanged(e) {
-    this.compTarget = this.target.getSelected();
-    var target = this.compTarget;
+  componentChanged: function componentChanged(target) {
+    target = target || this.getTarget();
+    this.compTarget = target;
     var validSelectors = [];
 
     if (target) {
-      this.getStates().val(target.get('state'));
-      validSelectors = target.get('classes').getValid();
+      var state = target.get('state');
+      state && this.getStates().val(state);
+      var selectors = target.getSelectors();
+      validSelectors = selectors.getValid();
     }
 
     this.collection.reset(validSelectors);
-    this.updateStateVis();
+    this.updateStateVis(target);
+  },
+  getTarget: function getTarget() {
+    var targetStyle = this.getStyleEmitter().model;
+    return this.target.getSelected();
   },
 
 
@@ -42648,35 +42733,36 @@ module.exports = _backbone2.default.View.extend({
    * inside collection
    * @private
    */
-  updateStateVis: function updateStateVis() {
+  updateStateVis: function updateStateVis(target) {
     var em = this.em;
     var avoidInline = em && em.getConfig('avoidInlineStyle');
-
-    if (this.collection.length || avoidInline) this.getStatesC().css('display', 'block');else this.getStatesC().css('display', 'none');
-    this.updateSelector();
+    var display = this.collection.length || avoidInline ? 'block' : 'none';
+    this.getStatesC().css('display', display);
+    this.updateSelector(target);
   },
 
 
   /**
-   * Udpate selector helper
+   * Update selector helper
    * @return {this}
    * @private
    */
-  updateSelector: function updateSelector() {
-    var selected = this.target.getSelected();
-    this.compTarget = selected;
+  updateSelector: function updateSelector(target) {
+    var pfx = this.pfx,
+        collection = this.collection,
+        el = this.el;
 
-    if (!selected || !selected.get) {
-      return;
-    }
+    var selected = target || this.getTarget();
+    this.compTarget = selected;
+    if (!selected || !selected.get) return;
 
     var state = selected.get('state');
-    var coll = this.collection;
-    var result = coll.getFullString(coll.getStyleable());
-    result = result || '#' + selected.getId();
+    var coll = collection;
+    var result = coll.getFullString(selected.getSelectors().getStyleable());
+    result = result || selected.get('selectorsAdd') || (selected.getId ? '#' + selected.getId() : '');
     result += state ? ':' + state : '';
-    var el = this.el.querySelector('#' + this.pfx + 'sel');
-    el && (el.innerHTML = result);
+    var elSel = el.querySelector('#' + pfx + 'sel');
+    elSel && (elSel.innerHTML = result);
   },
 
 
@@ -42711,10 +42797,8 @@ module.exports = _backbone2.default.View.extend({
       var model = sm.add({ label: label });
 
       if (component) {
-        var compCls = component.get('classes');
-        var lenB = compCls.length;
+        var compCls = component.getSelectors();
         compCls.add(model);
-        var lenA = compCls.length;
         this.collection.add(model);
         this.updateStateVis();
       }
@@ -42752,13 +42836,14 @@ module.exports = _backbone2.default.View.extend({
    * @private
    */
   renderClasses: function renderClasses() {
-    var fragment = document.createDocumentFragment();
+    var _this = this;
 
+    var frag = document.createDocumentFragment();
+    var classes = this.getClasses();
     this.collection.each(function (model) {
-      this.addToClasses(model, fragment);
-    }, this);
-
-    if (this.getClasses()) this.getClasses().empty().append(fragment);
+      return _this.addToClasses(model, frag);
+    });
+    classes.get(0) && classes.empty().append(frag);
 
     return this;
   },
@@ -43626,15 +43711,18 @@ module.exports = function () {
 
       var ppfx = c.pStylePrefix;
       if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
-
       properties = new Properties();
-      sectors = new Sectors(c.sectors, c);
+      sectors = new Sectors([], c);
       SectView = new SectorsView({
         collection: sectors,
         target: c.em,
         config: c
       });
+
       return this;
+    },
+    onLoad: function onLoad() {
+      sectors.add(c.sectors);
     },
     postRender: function postRender() {
       var elTo = this.getConfig().appendTo;
@@ -43844,6 +43932,7 @@ module.exports = function () {
         } else if (config.avoidInlineStyle) {
           rule = cssC.getIdRule(id, opts);
           !rule && (rule = cssC.setIdRule(id, {}, opts));
+          if (model.is('wrapper')) rule.set('wrapper', 1);
         }
 
         rule && (model = rule);
@@ -43930,6 +44019,20 @@ module.exports = function () {
 
 
     /**
+     * Select different target for the Style Manager.
+     * It could be a Component, CSSRule, or a string of any CSS selector
+     * @param {Component|CSSRule|String} target
+     * @return {Styleable} A Component or CSSRule
+     */
+    setTarget: function setTarget(target, opts) {
+      return SectView.setTarget(target, opts);
+    },
+    getEmitter: function getEmitter() {
+      return SectView.propTarget;
+    },
+
+
+    /**
      * Render sectors and properties
      * @return  {HTMLElement}
      * @private
@@ -43987,6 +44090,16 @@ module.exports = _backbone2.default.Model.extend({
       this.set('value', val.trim());
     }
   },
+
+
+  /**
+   * Get property at some index
+   * @param  {Number} index
+   * @return {Object}
+   */
+  getPropertyAt: function getPropertyAt(index) {
+    return this.get('properties').at(index);
+  },
   getPropertyValue: function getPropertyValue(property) {
     var result = '';
     this.get('properties').each(function (prop) {
@@ -44041,6 +44154,11 @@ module.exports = _backbone2.default.Collection.extend({
   onReset: function onReset() {
     this.idx = 1;
   },
+  getSeparator: function getSeparator() {
+    var property = this.property;
+
+    return property ? property.get('layerSeparator') : ', ';
+  },
 
 
   /**
@@ -44062,7 +44180,7 @@ module.exports = _backbone2.default.Collection.extend({
       var cleaned = match.replace(/,\s*/g, ',');
       value = value.replace(match, cleaned);
     });
-    var layerValues = value ? value.split(', ') : [];
+    var layerValues = value ? value.split(this.getSeparator()) : [];
     layerValues.forEach(function (layerValue) {
       layers.push({ properties: _this.properties.parseValue(layerValue) });
     });
@@ -44133,7 +44251,7 @@ module.exports = _backbone2.default.Collection.extend({
     this.each(function (layer) {
       return result.push(layer.getFullValue());
     });
-    return result.join(', ');
+    return result.join(this.getSeparator());
   },
   getPropertyValues: function getPropertyValues(property) {
     var result = [];
@@ -44304,7 +44422,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
-module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js").Model.extend({
+var Property = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js").Model.extend({
   defaults: {
     name: '',
     property: '',
@@ -44318,6 +44436,9 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     visible: true,
     fixedValues: ['initial', 'inherit'],
 
+    // If true, the property will be forced to be full width
+    full: 0,
+
     // If true to the value will be added '!important'
     important: 0,
 
@@ -44329,18 +44450,19 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     toRequire: 0
   },
 
-  initialize: function initialize(opt) {
-    var o = opt || {};
+  initialize: function initialize() {
+    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     var name = this.get('name');
     var prop = this.get('property');
 
     if (!name) {
       this.set('name', prop.charAt(0).toUpperCase() + prop.slice(1).replace(/-/g, ' '));
     }
-
-    var init = this.init && this.init.bind(this);
-    init && init();
+    Property.callInit(this, props, opts);
   },
+  init: function init() {},
 
 
   /**
@@ -44403,6 +44525,8 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
    *
    */
   parseValue: function parseValue(value) {
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     var result = { value: value };
     var imp = '!important';
 
@@ -44411,7 +44535,7 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
       result.important = 1;
     }
 
-    if (!this.get('functionName')) {
+    if (!this.get('functionName') && !opts.complete) {
       return result;
     }
 
@@ -44419,6 +44543,8 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     var valueStr = '' + result.value;
     var start = valueStr.indexOf('(') + 1;
     var end = valueStr.lastIndexOf(')');
+    var functionName = valueStr.substring(0, start - 1);
+    if (functionName) result.functionName = functionName;
     args.push(start);
 
     // Will try even if the last closing parentheses is not found
@@ -44427,6 +44553,13 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     }
 
     result.value = String.prototype.substring.apply(valueStr, args);
+
+    if (opts.numeric) {
+      var num = parseFloat(result.value);
+      result.unit = result.value.replace(num, '');
+      result.value = num;
+    }
+
     return result;
   },
 
@@ -44463,7 +44596,22 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
 
     return value || '';
   }
+}, {
+  callParentInit: function callParentInit(property, ctx, props) {
+    var opts = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+
+    property.prototype.initialize.apply(ctx, [props, _extends({}, opts, {
+      skipInit: 1
+    })]);
+  },
+  callInit: function callInit(context, props) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    !opts.skipInit && context.init(props, opts);
+  }
 });
+
+module.exports = Property;
 
 /***/ }),
 
@@ -44501,11 +44649,16 @@ module.exports = Property.extend({
     separator: ' '
   }),
 
-  init: function init() {
+  initialize: function initialize() {
+    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    Property.callParentInit(Property, this, props, opts);
     var properties = this.get('properties') || [];
     var Properties = __webpack_require__(/*! ./Properties */ "./src/style_manager/model/Properties.js");
     this.set('properties', new Properties(properties));
     this.listenTo(this, 'change:value', this.updateValues);
+    Property.callInit(this, props, opts);
   },
 
 
@@ -44565,6 +44718,16 @@ module.exports = Property.extend({
     }
 
     return this.get('properties').getFullValue();
+  },
+
+
+  /**
+   * Get property at some index
+   * @param  {Number} index
+   * @return {Object}
+   */
+  getPropertyAt: function getPropertyAt(index) {
+    return this.get('properties').at(index);
   }
 });
 
@@ -45277,19 +45440,55 @@ module.exports = Property.extend({
     // Array of layers (which contain properties)
     layers: [],
 
+    // The separator used to join layer values
+    layerSeparator: ', ',
+
     // Layer preview
     preview: 0
   }),
 
-  init: function init() {
-    Property.prototype.init.apply(this, arguments);
+  initialize: function initialize() {
+    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    Property.callParentInit(Property, this, props, opts);
     var layers = this.get('layers');
     var layersColl = new Layers(layers);
+    layersColl.property = this;
     layersColl.properties = this.get('properties');
     this.set('layers', layersColl);
+    Property.callInit(this, props, opts);
+  },
+  getLayers: function getLayers() {
+    return this.get('layers');
+  },
+  getCurrentLayer: function getCurrentLayer() {
+    return this.getLayers().filter(function (layer) {
+      return layer.get('active');
+    })[0];
   },
   getFullValue: function getFullValue() {
     return this.get('detached') ? '' : this.get('layers').getFullValue();
+  },
+
+
+  /**
+   * This method allows to customize layers returned from the target
+   * @param  {Object} target
+   * @return {Array} Should return an array of layers
+   * @example
+   * // return example
+   * [
+   *  {
+   *    properties: [
+   *      { property: 'width', ... }
+   *      { property: 'height', ... }
+   *    ]
+   *  }
+   * ]
+   */
+  getLayersFromTarget: function getLayersFromTarget(target) {
+    return;
   }
 });
 
@@ -45359,7 +45558,7 @@ module.exports = Backbone.Model.extend({
           // Check for nested properties
           var mPProps = mProp.properties;
           if (mPProps && mPProps.length) {
-            mProp.properties = this.extendProperties(prop.properties, mPProps, 1);
+            mProp.properties = this.extendProperties(prop.properties || [], mPProps, 1);
           }
           props[j] = ext ? (0, _underscore.extend)(prop, mProp) : mProp;
           isolated[j] = props[j];
@@ -45465,10 +45664,6 @@ module.exports = _backbone2.default.View.extend({
     this.listenTo(model, 'change:active', this.updateVisibility);
     this.listenTo(model.get('properties'), 'change', this.updatePreview);
 
-    if (!model.get('preview')) {
-      this.$el.addClass(this.pfx + 'no-preview');
-    }
-
     // For the sorter
     model.view = this;
     model.set({ droppable: 0, draggable: 1 });
@@ -45569,9 +45764,11 @@ module.exports = _backbone2.default.View.extend({
   render: function render() {
     var PropertiesView = __webpack_require__(/*! ./PropertiesView */ "./src/style_manager/view/PropertiesView.js");
     var propsConfig = this.propsConfig;
-    var className = this.pfx + 'layer';
-    var model = this.model;
-    var el = this.el;
+    var model = this.model,
+        el = this.el,
+        pfx = this.pfx;
+
+    var preview = model.get('preview');
     var properties = new PropertiesView({
       collection: model.get('properties'),
       config: this.config,
@@ -45580,8 +45777,9 @@ module.exports = _backbone2.default.View.extend({
       propTarget: propsConfig.propTarget,
       onChange: propsConfig.onChange
     }).render().el;
+
     el.innerHTML = this.template(model);
-    el.className = className;
+    el.className = pfx + 'layer' + (!preview ? ' ' + pfx + 'no-preview' : '');
     this.getPropertiesWrapper().appendChild(properties);
     this.updateVisibility();
     this.updatePreview();
@@ -46016,6 +46214,8 @@ module.exports = PropertyView.extend({
 "use strict";
 
 
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
 var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 
 var _backbone2 = _interopRequireDefault(_backbone);
@@ -46134,7 +46334,8 @@ module.exports = PropertyView.extend({
    * @return void
    * */
   openAssetManager: function openAssetManager(e) {
-    var that = this;
+    var _this = this;
+
     var em = this.em,
         modal = this.modal;
 
@@ -46147,9 +46348,11 @@ module.exports = PropertyView.extend({
         target: this.getTargetModel(),
         onClick: function onClick() {},
         onDblClick: function onDblClick() {},
+
         onSelect: function onSelect(asset) {
           modal.close();
-          that.spreadUrl(asset.get('src'));
+          var url = (0, _underscore.isString)(asset) ? asset : asset.get('src');
+          _this.spreadUrl(url);
         }
       });
     }
@@ -46187,6 +46390,7 @@ module.exports = PropertyView.extend({
     var model = this.model;
     this.listenTo(model, 'change:unit', this.modelValueChanged);
     this.listenTo(model, 'el:change', this.elementUpdated);
+    this.listenTo(model, 'change:units', this.render);
   },
   setValue: function setValue(value) {
     var parsed = this.model.parseValue(value);
@@ -46208,6 +46412,11 @@ module.exports = PropertyView.extend({
       this.input = this.$input.get(0);
       this.inputInst = input;
     }
+  },
+  clearCached: function clearCached() {
+    PropertyView.prototype.clearCached.apply(this, arguments);
+    this.unit = null;
+    this.$unit = null;
   }
 });
 
@@ -46391,8 +46600,9 @@ module.exports = Property.extend({
     this.elementUpdated();
   },
   setValue: function setValue(value) {
-    this.getSliderEl().value = parseFloat(value);
-    this.inputInst.setValue(value, { silent: 1 });
+    var parsed = this.model.parseValue(value);
+    this.getSliderEl().value = parseFloat(parsed.value);
+    Property.prototype.setValue.apply(this, arguments);
   },
   onRender: function onRender() {
     Property.prototype.onRender.apply(this, arguments);
@@ -46543,10 +46753,10 @@ module.exports = PropertyCompositeView.extend({
     var model = this.model;
     var layers = this.getLayers();
     var detached = model.get('detached');
+    var target = this.getTarget();
 
     // With detached layers values will be assigned to their properties
     if (detached) {
-      var target = this.getTarget();
       var style = target ? target.getStyle() : {};
       layersObj = layers.getLayersFromStyle(style);
     } else {
@@ -46555,8 +46765,9 @@ module.exports = PropertyCompositeView.extend({
       layersObj = layers.getLayersFromValue(value);
     }
 
+    var toAdd = model.getLayersFromTarget(target) || layersObj;
     layers.reset();
-    layers.add(layersObj);
+    layers.add(toAdd);
     model.set({ stackIndex: null }, { silent: true });
   },
   onRender: function onRender() {
@@ -46679,7 +46890,7 @@ module.exports = _backbone2.default.View.extend({
 
     em && em.on('update:component:style:' + this.property, this.targetUpdated);
     //em && em.on(`styleable:change:${this.property}`, this.targetUpdated);
-    this.listenTo(this.propTarget, 'update', this.targetUpdated);
+    this.listenTo(this.propTarget, 'update styleManager:update', this.targetUpdated);
     this.listenTo(model, 'destroy remove', this.remove);
     this.listenTo(model, 'change:value', this.modelValueChanged);
     this.listenTo(model, 'targetUpdated', this.targetUpdated);
@@ -46797,10 +47008,17 @@ module.exports = _backbone2.default.View.extend({
   },
 
 
+  emitUpdateTarget: (0, _underscore.debounce)(function () {
+    var em = this.config.em;
+    em && em.trigger('styleManager:update:target', this.getTarget());
+  }),
+
   /**
    * Fired when the target is changed
    * */
   targetUpdated: function targetUpdated() {
+    this.emitUpdateTarget();
+
     if (!this.checkVisibility()) {
       return;
     }
@@ -47109,8 +47327,12 @@ module.exports = _backbone2.default.View.extend({
     var pfx = this.pfx;
     var model = this.model;
     var el = this.el;
+    var property = model.get('property');
+    var full = model.get('full');
+    var className = pfx + 'property';
     el.innerHTML = this.template(model);
-    el.className = pfx + 'property ' + pfx + model.get('type');
+    el.className = className + ' ' + pfx + model.get('type') + ' ' + className + '__' + property;
+    el.className += full ? ' ' + className + '--full' : '';
     this.updateStatus();
 
     var onRender = this.onRender && this.onRender.bind(this);
@@ -47351,6 +47573,54 @@ module.exports = _backbone2.default.View.extend({
     state && appendStateRule(model.getStyle());
     pt.model = model;
     pt.trigger('update');
+  },
+
+
+  /**
+   * Select different target for the Style Manager.
+   * It could be a Component, CSSRule, or a string of any CSS selector
+   * @param {Component|CSSRule|String} target
+   * @return {Styleable} A Component or CSSRule
+   */
+  setTarget: function setTarget(target) {
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    var em = this.target;
+    var config = em.get('Config');
+    var targetIsClass = opts.targetIsClass,
+        stylable = opts.stylable;
+
+    var model = target;
+
+    if ((0, _underscore.isString)(target)) {
+      var rule = void 0;
+      var rules = em.get('CssComposer').getAll();
+
+      if (targetIsClass) {
+        rule = rules.filter(function (rule) {
+          return rule.get('selectors').getFullString() === target;
+        })[0];
+      }
+
+      if (!rule) {
+        rule = rules.filter(function (rule) {
+          return rule.get('selectorsAdd') === target;
+        })[0];
+      }
+
+      if (!rule) {
+        rule = rules.add({ selectors: [], selectorsAdd: target });
+      }
+
+      stylable && rule.set({ stylable: stylable });
+      model = rule;
+    }
+
+    var state = !config.devicePreviewMode ? model.get('state') : '';
+    var pt = this.propTarget;
+    pt.model = model;
+    pt.trigger('styleManager:update', model);
+    return model;
   },
 
 
@@ -47775,6 +48045,68 @@ module.exports = Backbone.Collection.extend({
 
 /***/ }),
 
+/***/ "./src/trait_manager/view/TraitButtonView.js":
+/*!***************************************************!*\
+  !*** ./src/trait_manager/view/TraitButtonView.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
+var TraitView = __webpack_require__(/*! ./TraitView */ "./src/trait_manager/view/TraitView.js");
+
+module.exports = TraitView.extend({
+  events: {
+    'click button': 'handleClick'
+  },
+
+  handleClick: function handleClick() {
+    var model = this.model,
+        em = this.em;
+
+    var command = model.get('command');
+
+    if (command) {
+      if ((0, _underscore.isString)(command)) {
+        em.get('Commands').run(command);
+      } else {
+        command(em.get('Editor'), model);
+      }
+    }
+  },
+  renderLabel: function renderLabel() {
+    if (this.model.get('label')) {
+      TraitView.prototype.renderLabel.apply(this, arguments);
+    }
+  },
+  getInputEl: function getInputEl() {
+    if (!this.input) {
+      var model = this.model,
+          ppfx = this.ppfx;
+
+      var value = this.getModelValue();
+      var label = model.get('labelButton') || '';
+      var full = model.get('full');
+      var className = ppfx + 'btn';
+      var input = '<button type="button" class="' + className + '-prim' + (full ? ' ' + className + '--full' : '') + '">\n        ' + label + '</button>';
+      this.input = input;
+    }
+
+    return this.input;
+  },
+  renderField: function renderField() {
+    if (!this.$input) {
+      this.$el.append(this.getInputEl());
+    }
+  }
+});
+
+/***/ }),
+
 /***/ "./src/trait_manager/view/TraitCheckboxView.js":
 /*!*****************************************************!*\
   !*** ./src/trait_manager/view/TraitCheckboxView.js ***!
@@ -47784,6 +48116,8 @@ module.exports = Backbone.Collection.extend({
 
 "use strict";
 
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
 var TraitView = __webpack_require__(/*! ./TraitView */ "./src/trait_manager/view/TraitView.js");
 
@@ -47803,7 +48137,25 @@ module.exports = TraitView.extend({
    * @private
    */
   onChange: function onChange() {
-    this.model.set('value', this.getInputEl().checked);
+    var value = this.getInputEl().checked;
+    this.model.set('value', this.getCheckedValue(value));
+  },
+  getCheckedValue: function getCheckedValue(checked) {
+    var result = checked;
+    var _model$attributes = this.model.attributes,
+        valueTrue = _model$attributes.valueTrue,
+        valueFalse = _model$attributes.valueFalse;
+
+
+    if (result && !(0, _underscore.isUndefined)(valueTrue)) {
+      result = valueTrue;
+    }
+
+    if (!result && !(0, _underscore.isUndefined)(valueFalse)) {
+      result = valueFalse;
+    }
+
+    return result;
   },
 
 
@@ -47822,17 +48174,26 @@ module.exports = TraitView.extend({
     var el = TraitView.prototype.getInputEl.apply(this, args);
 
     if (toInit) {
-      var checked = void 0;
+      var checked = void 0,
+          targetValue = void 0;
       var model = this.model,
           target = this.target;
+      var _model$attributes2 = model.attributes,
+          valueTrue = _model$attributes2.valueTrue,
+          valueFalse = _model$attributes2.valueFalse;
 
       var name = model.get('name');
 
       if (model.get('changeProp')) {
         checked = target.get(name);
+        targetValue = checked;
       } else {
-        checked = target.get('attributes')[name];
-        checked = checked || checked === '' ? !0 : !1;
+        targetValue = target.get('attributes')[name];
+        checked = targetValue || targetValue === '' ? !0 : !1;
+      }
+
+      if (!(0, _underscore.isUndefined)(valueFalse) && targetValue === valueFalse) {
+        checked = !1;
       }
 
       el.checked = checked;
@@ -48059,6 +48420,7 @@ module.exports = Backbone.View.extend({
     var name = model.get('name');
     var target = model.target;
     this.config = o.config || {};
+    this.em = this.config.em;
     this.pfx = this.config.stylePrefix || '';
     this.ppfx = this.config.pStylePrefix || '';
     this.target = target;
@@ -48218,6 +48580,7 @@ var TraitSelectView = __webpack_require__(/*! ./TraitSelectView */ "./src/trait_
 var TraitCheckboxView = __webpack_require__(/*! ./TraitCheckboxView */ "./src/trait_manager/view/TraitCheckboxView.js");
 var TraitNumberView = __webpack_require__(/*! ./TraitNumberView */ "./src/trait_manager/view/TraitNumberView.js");
 var TraitColorView = __webpack_require__(/*! ./TraitColorView */ "./src/trait_manager/view/TraitColorView.js");
+var TraitButtonView = __webpack_require__(/*! ./TraitButtonView */ "./src/trait_manager/view/TraitButtonView.js");
 
 module.exports = DomainViews.extend({
   itemView: TraitView,
@@ -48227,7 +48590,8 @@ module.exports = DomainViews.extend({
     number: TraitNumberView,
     select: TraitSelectView,
     checkbox: TraitCheckboxView,
-    color: TraitColorView
+    color: TraitColorView,
+    button: TraitButtonView
   },
 
   initialize: function initialize() {
@@ -48253,11 +48617,8 @@ module.exports = DomainViews.extend({
     var ppfx = this.ppfx;
     var comp = this.em.getSelected();
     this.el.className = this.className + ' ' + ppfx + 'one-bg ' + ppfx + 'two-color';
-
-    if (comp) {
-      this.collection = comp.get('traits');
-      this.render();
-    }
+    this.collection = comp ? comp.get('traits') : [];
+    this.render();
   }
 });
 

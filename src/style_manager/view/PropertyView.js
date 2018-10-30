@@ -1,5 +1,5 @@
 import Backbone from 'backbone';
-import { bindAll, isArray, isUndefined } from 'underscore';
+import { bindAll, isArray, isUndefined, debounce } from 'underscore';
 import { camelCase } from 'utils/mixins';
 
 const clearProp = 'data-clear-style';
@@ -68,7 +68,11 @@ module.exports = Backbone.View.extend({
 
     em && em.on(`update:component:style:${this.property}`, this.targetUpdated);
     //em && em.on(`styleable:change:${this.property}`, this.targetUpdated);
-    this.listenTo(this.propTarget, 'update', this.targetUpdated);
+    this.listenTo(
+      this.propTarget,
+      'update styleManager:update',
+      this.targetUpdated
+    );
     this.listenTo(model, 'destroy remove', this.remove);
     this.listenTo(model, 'change:value', this.modelValueChanged);
     this.listenTo(model, 'targetUpdated', this.targetUpdated);
@@ -178,10 +182,17 @@ module.exports = Backbone.View.extend({
     parent && parent.set('status', value);
   },
 
+  emitUpdateTarget: debounce(function() {
+    const em = this.config.em;
+    em && em.trigger('styleManager:update:target', this.getTarget());
+  }),
+
   /**
    * Fired when the target is changed
    * */
   targetUpdated() {
+    this.emitUpdateTarget();
+
     if (!this.checkVisibility()) {
       return;
     }
@@ -484,8 +495,14 @@ module.exports = Backbone.View.extend({
     const pfx = this.pfx;
     const model = this.model;
     const el = this.el;
+    const property = model.get('property');
+    const full = model.get('full');
+    const className = `${pfx}property`;
     el.innerHTML = this.template(model);
-    el.className = `${pfx}property ${pfx}${model.get('type')}`;
+    el.className = `${className} ${pfx}${model.get(
+      'type'
+    )} ${className}__${property}`;
+    el.className += full ? ` ${className}--full` : '';
     this.updateStatus();
 
     const onRender = this.onRender && this.onRender.bind(this);

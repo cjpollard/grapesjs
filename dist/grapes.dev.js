@@ -44605,6 +44605,12 @@ module.exports = function () {
           case 'border-radius-c':
             obj.property = 'border-radius';
             break;
+          case 'margin-c':
+            obj.property = 'margin';
+            break;
+          case 'padding-c':
+            obj.property = 'padding';
+            break;
         }
 
         // Fixed values
@@ -44661,10 +44667,12 @@ module.exports = function () {
           case 'right':
           case 'bottom':
           case 'left':
+          case 'margin-c':
           case 'margin-top':
           case 'margin-right':
           case 'margin-bottom':
           case 'margin-left':
+          case 'padding-c':
           case 'padding-top':
           case 'padding-right':
           case 'padding-bottom':
@@ -44747,10 +44755,12 @@ module.exports = function () {
           case 'right':
           case 'bottom':
           case 'left':
+          case 'margin-c':
           case 'margin-top':
           case 'margin-right':
           case 'margin-bottom':
           case 'margin-left':
+          case 'padding-c':
           case 'padding-top':
           case 'padding-right':
           case 'padding-bottom':
@@ -44860,6 +44870,8 @@ module.exports = function () {
           case 'border-bottom-left-radius':
           case 'box-shadow-h':
           case 'box-shadow-v':
+          case 'margin-c':
+          case 'padding-c':
             obj.units = ['px', '%'];
             break;
           case 'top':

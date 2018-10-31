@@ -10,6 +10,7 @@ module.exports = Input.extend({
     'change select': 'handleUnitChange',
     'click [data-arrow-up]': 'upArrowClick',
     'click [data-arrow-down]': 'downArrowClick',
+    'keyup input': 'handleKeyUp',
     'mousedown [data-arrows]': 'downIncrement'
   },
 
@@ -68,6 +69,12 @@ module.exports = Input.extend({
     e.stopPropagation();
     this.setValue(this.getInputEl().value);
     this.elementUpdated();
+  },
+
+  handleKeyUp(e) {
+    e.stopPropagation();
+    if (e.keyCode === 38) this.upArrowClick();
+    if (e.keyCode === 40) this.downArrowClick();
   },
 
   /**

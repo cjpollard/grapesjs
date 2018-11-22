@@ -171,6 +171,10 @@ const Component = Backbone.Model.extend(Styleable).extend(
         );
       });
       this.init();
+
+      if (em) {
+        em.trigger('component:create', this);
+      }
     },
 
     /**
@@ -621,16 +625,20 @@ const Component = Backbone.Model.extend(Styleable).extend(
      * @private
      */
     loadTraits(traits, opts = {}) {
-      var trt = new Traits([], this.opt);
-      trt.setTarget(this);
       traits = traits || this.get('traits');
 
-      if (traits.length) {
-        traits.forEach(tr => tr.attributes && delete tr.attributes.value);
-        trt.add(traits);
+      if (!(traits instanceof Traits)) {
+        const trt = new Traits([], this.opt);
+        trt.setTarget(this);
+
+        if (traits.length) {
+          traits.forEach(tr => tr.attributes && delete tr.attributes.value);
+          trt.add(traits);
+        }
+
+        this.set('traits', trt, opts);
       }
 
-      this.set('traits', trt, opts);
       return this;
     },
 
@@ -886,12 +894,21 @@ const Component = Backbone.Model.extend(Styleable).extend(
     },
 
     /**
-     * Get the DOM element of the component. This works only of the
-     * component is already rendered
+     * Get the DOM element of the component.
+     * This works only if the component is already rendered
      * @return {HTMLElement}
      */
     getEl() {
       return this.view && this.view.el;
+    },
+
+    /**
+     * Get the View of the component.
+     * This works only if the component is already rendered
+     * @return {ComponentView}
+     */
+    getView() {
+      return this.view;
     },
 
     /**

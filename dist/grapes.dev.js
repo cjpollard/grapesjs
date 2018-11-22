@@ -24615,7 +24615,8 @@ module.exports = function () {
      * @return {HTMLBodyElement}
      */
     getBody: function getBody() {
-      return this.getDocument().body;
+      var doc = this.getDocument();
+      return doc && doc.body;
     },
 
 
@@ -24624,7 +24625,8 @@ module.exports = function () {
      * @return {HTMLElement}
      */
     getWrapperEl: function getWrapperEl() {
-      return this.getBody().querySelector('#wrapper');
+      var body = this.getBody();
+      return body && body.querySelector('#wrapper');
     },
 
 
@@ -25884,6 +25886,8 @@ module.exports = _backbone2.default.Model.extend({
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
+var maxValue = Number.MAX_VALUE;
+
 module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js").Model.extend({
   initialize: function initialize() {
     this.compCls = [];
@@ -25941,54 +25945,47 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     var clearStyles = (0, _underscore.isUndefined)(opts.clearStyles) && em ? em.getConfig('clearStyles') : opts.clearStyles;
 
     if (cssc) {
-      (function () {
-        var rules = cssc.getAll();
-        var atRules = {};
-        var dump = [];
+      var rules = cssc.getAll();
+      var atRules = {};
+      var dump = [];
 
-        rules.each(function (rule) {
-          var atRule = rule.getAtRule();
+      rules.each(function (rule) {
+        var atRule = rule.getAtRule();
 
-          if (atRule) {
-            var mRules = atRules[atRule];
-            if (mRules) {
-              mRules.push(rule);
-            } else {
-              atRules[atRule] = [rule];
-            }
-            return;
-          }
-
-          code += _this2.buildFromRule(rule, dump, opts);
-        });
-
-        // Get at-rules
-
-        var _loop = function _loop(atRule) {
-          var rulesStr = '';
+        if (atRule) {
           var mRules = atRules[atRule];
-
-          mRules.forEach(function (rule) {
-            var ruleStr = _this2.buildFromRule(rule, dump, opts);
-
-            if (rule.get('singleAtRule')) {
-              code += atRule + '{' + ruleStr + '}';
-            } else {
-              rulesStr += ruleStr;
-            }
-          });
-
-          if (rulesStr) {
-            code += atRule + '{' + rulesStr + '}';
+          if (mRules) {
+            mRules.push(rule);
+          } else {
+            atRules[atRule] = [rule];
           }
-        };
-
-        for (var atRule in atRules) {
-          _loop(atRule);
+          return;
         }
 
-        em && clearStyles && rules.remove(dump);
-      })();
+        code += _this2.buildFromRule(rule, dump, opts);
+      });
+
+      this.sortMediaObject(atRules).forEach(function (item) {
+        var rulesStr = '';
+        var atRule = item.key;
+        var mRules = item.value;
+
+        mRules.forEach(function (rule) {
+          var ruleStr = _this2.buildFromRule(rule, dump, opts);
+
+          if (rule.get('singleAtRule')) {
+            code += atRule + '{' + ruleStr + '}';
+          } else {
+            rulesStr += ruleStr;
+          }
+        });
+
+        if (rulesStr) {
+          code += atRule + '{' + rulesStr + '}';
+        }
+      });
+
+      em && clearStyles && rules.remove(dump);
     }
 
     return code;
@@ -26027,6 +26024,40 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     }
 
     return result;
+  },
+
+
+  /**
+   * Get the numeric length of the media query string
+   * @param  {String} mediaQuery Media query string
+   * @return {Number}
+   */
+  getQueryLength: function getQueryLength(mediaQuery) {
+    var length = /(-?\d*\.?\d+)\w{0,}/.exec(mediaQuery);
+    if (!length) return maxValue;
+
+    return parseFloat(length[1]);
+  },
+
+
+  /**
+   * Return a sorted array from media query object
+   * @param  {Object} items
+   * @return {Array}
+   */
+  sortMediaObject: function sortMediaObject() {
+    var _this4 = this;
+
+    var items = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    var result = {};
+    var itemsArr = [];
+    (0, _underscore.each)(items, function (value, key) {
+      return itemsArr.push({ key: key, value: value });
+    });
+    return itemsArr.sort(function (a, b) {
+      return _this4.getQueryLength(b.key) - _this4.getQueryLength(a.key);
+    });
   }
 });
 
@@ -27696,6 +27727,8 @@ module.exports = {
 "use strict";
 
 
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
 module.exports = {
   /**
    * Check if fullscreen mode is enabled
@@ -27749,11 +27782,16 @@ module.exports = {
     }
   },
   run: function run(editor, sender) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
     this.sender = sender;
-    var pfx = this.enable(editor.getContainer());
+    var target = opts.target;
+
+    var targetEl = (0, _underscore.isElement)(target) ? target : document.querySelector(target);
+    var pfx = this.enable(targetEl || editor.getContainer());
     this.fsChanged = this.fsChanged.bind(this, pfx);
     document.addEventListener(pfx + 'fullscreenchange', this.fsChanged);
-    if (editor) editor.trigger('change:canvasOffset');
+    editor.trigger('change:canvasOffset');
   },
   stop: function stop(editor, sender) {
     if (sender && sender.set) sender.set('active', false);
@@ -30506,9 +30544,8 @@ var CssRuleView = __webpack_require__(/*! ./CssRuleView */ "./src/css_composer/v
 var CssGroupRuleView = __webpack_require__(/*! ./CssGroupRuleView */ "./src/css_composer/view/CssGroupRuleView.js");
 var $ = _backbone2.default.$;
 
-// % is not a valid character for classes
-var getBlockId = function getBlockId(pfx, widthMedia) {
-  return '' + pfx + (widthMedia ? '-' + widthMedia.replace('%', 'pc') : '');
+var getBlockId = function getBlockId(pfx, order) {
+  return '' + pfx + (order ? '-' + parseFloat(order) : '');
 };
 
 module.exports = _backbone2.default.View.extend({
@@ -30623,12 +30660,8 @@ module.exports = _backbone2.default.View.extend({
     $el.empty();
 
     // Create devices related DOM structure
-    this.em.get('DeviceManager').getAll().map(function (model) {
-      return model.get('widthMedia');
-    }).sort(function (left, right) {
-      return (right && right.replace('px', '') || Number.MAX_VALUE) - (left && left.replace('px', '') || Number.MAX_VALUE);
-    }).forEach(function (widthMedia) {
-      $('<div id="' + getBlockId(className, widthMedia) + '"></div>').appendTo(frag);
+    this.em.get('DeviceManager').getAll().pluck('priority').forEach(function (priority) {
+      $('<div id="' + getBlockId(className, priority) + '"></div>').appendTo(frag);
     });
 
     this.collection.each(function (model) {
@@ -30829,12 +30862,19 @@ module.exports = _backbone2.default.Model.extend({
 
     // The width which will be used in media queries,
     // If empty the width will be used
-    widthMedia: null
+    widthMedia: null,
+
+    // Setup the order of media queries
+    priority: null
   },
 
   initialize: function initialize() {
     if (this.get('widthMedia') == null) {
       this.set('widthMedia', this.get('width'));
+    }
+
+    if (!this.get('priority')) {
+      this.set('priority', parseFloat(this.get('widthMedia')) || 0);
     }
   }
 });
@@ -30860,7 +30900,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var Device = __webpack_require__(/*! ./Device */ "./src/device_manager/model/Device.js");
 
 module.exports = _backbone2.default.Collection.extend({
-  model: Device
+  model: Device,
+
+  comparator: function comparator(left, right) {
+    var max = Number.MAX_VALUE;
+    return (right.get('priority') || max) - (left.get('priority') || max);
+  },
+
+  getSorted: function getSorted() {
+    return this.sort();
+  }
 });
 
 /***/ }),
@@ -31823,6 +31872,10 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend((_Backbone$Mod
       });
     });
     this.init();
+
+    if (em) {
+      em.trigger('component:create', this);
+    }
   },
 
 
@@ -32307,18 +32360,22 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend((_Backbone$Mod
   loadTraits: function loadTraits(traits) {
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var trt = new Traits([], this.opt);
-    trt.setTarget(this);
     traits = traits || this.get('traits');
 
-    if (traits.length) {
-      traits.forEach(function (tr) {
-        return tr.attributes && delete tr.attributes.value;
-      });
-      trt.add(traits);
+    if (!(traits instanceof Traits)) {
+      var trt = new Traits([], this.opt);
+      trt.setTarget(this);
+
+      if (traits.length) {
+        traits.forEach(function (tr) {
+          return tr.attributes && delete tr.attributes.value;
+        });
+        trt.add(traits);
+      }
+
+      this.set('traits', trt, opts);
     }
 
-    this.set('traits', trt, opts);
     return this;
   },
 
@@ -32510,6 +32567,8 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend((_Backbone$Mod
   return this;
 }), _defineProperty(_Backbone$Model$exten, 'getEl', function getEl() {
   return this.view && this.view.el;
+}), _defineProperty(_Backbone$Model$exten, 'getView', function getView() {
+  return this.view;
 }), _defineProperty(_Backbone$Model$exten, 'getScriptString', function getScriptString(script) {
   var _this4 = this;
 
@@ -33901,7 +33960,7 @@ module.exports = ComponentView.extend({
   tagName: 'img',
 
   events: {
-    dblclick: 'openModal',
+    dblclick: 'onActive',
     click: 'initResize'
   },
 
@@ -33909,7 +33968,6 @@ module.exports = ComponentView.extend({
     var model = this.model;
     ComponentView.prototype.initialize.apply(this, arguments);
     this.listenTo(model, 'change:src', this.updateSrc);
-    this.listenTo(model, 'dblclick active', this.openModal);
     this.classEmpty = this.ppfx + 'plh-image';
     var config = this.config;
     config.modal && (this.modal = config.modal);
@@ -33959,7 +34017,8 @@ module.exports = ComponentView.extend({
    * @param  {Object}  e  Event
    * @private
    * */
-  openModal: function openModal(e) {
+  onActive: function onActive(ev) {
+    ev && ev.stopPropagation();
     var em = this.opts.config.em;
     var editor = em ? em.get('Editor') : '';
 
@@ -33976,14 +34035,16 @@ module.exports = ComponentView.extend({
     }
   },
   render: function render() {
-    this.updateAttributes();
-    this.updateClasses();
+    this.renderAttributes();
+    var $el = this.$el,
+        model = this.model;
 
-    var actCls = this.$el.attr('class') || '';
-    if (!this.model.get('src')) this.$el.attr('class', (actCls + ' ' + this.classEmpty).trim());
+    var cls = $el.attr('class') || '';
+    !model.get('src') && $el.attr('class', (cls + ' ' + this.classEmpty).trim());
+    // Avoid strange behaviours with drag and drop
+    $el.attr('onmousedown', 'return false');
+    this.postRender();
 
-    // Avoid strange behaviours while try to drag
-    this.$el.attr('onmousedown', 'return false');
     return this;
   }
 });
@@ -34167,10 +34228,7 @@ module.exports = ComponentView.extend({
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
-
-module.exports = ComponentView.extend({});
+module.exports = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js").extend({});
 
 /***/ }),
 
@@ -34184,10 +34242,7 @@ module.exports = ComponentView.extend({});
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
-
-module.exports = ComponentView.extend({});
+module.exports = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js").extend({});
 
 /***/ }),
 
@@ -34201,10 +34256,7 @@ module.exports = ComponentView.extend({});
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
-
-module.exports = ComponentView.extend({});
+module.exports = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js").extend({});
 
 /***/ }),
 
@@ -34218,10 +34270,7 @@ module.exports = ComponentView.extend({});
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
-
-module.exports = ComponentView.extend({});
+module.exports = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js").extend({});
 
 /***/ }),
 
@@ -34235,10 +34284,7 @@ module.exports = ComponentView.extend({});
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
-
-module.exports = ComponentView.extend({});
+module.exports = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js").extend({});
 
 /***/ }),
 
@@ -34252,10 +34298,7 @@ module.exports = ComponentView.extend({});
 "use strict";
 
 
-var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
-
-module.exports = ComponentView.extend({
+module.exports = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js").extend({
   events: {}
 });
 
@@ -34291,7 +34334,7 @@ var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_compon
 
 module.exports = ComponentView.extend({
   events: {
-    dblclick: 'enableEditing',
+    dblclick: 'onActive',
     input: 'onInput'
   },
 
@@ -34300,9 +34343,14 @@ module.exports = ComponentView.extend({
     this.disableEditing = this.disableEditing.bind(this);
     var model = this.model;
     var em = this.em;
-    this.listenTo(model, 'focus active', this.enableEditing);
-    this.listenTo(model, 'change:content', this.updateContent);
+    this.listenTo(model, 'focus', this.onActive);
+    this.listenTo(model, 'change:content', this.updateContentText);
     this.rte = em && em.get('RichTextEditor');
+  },
+  updateContentText: function updateContentText(m, v) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    !opts.fromDisable && this.disableEditing();
   },
 
 
@@ -34310,7 +34358,7 @@ module.exports = ComponentView.extend({
    * Enable element content editing
    * @private
    * */
-  enableEditing: function enableEditing(e) {
+  onActive: function onActive(e) {
     // We place this before stopPropagation in case of nested
     // text components will not block the editing (#1394)
     if (this.rteEnabled || !this.model.get('editable')) {
@@ -34340,6 +34388,7 @@ module.exports = ComponentView.extend({
     var model = this.model;
     var editable = model.get('editable');
     var rte = this.rte;
+    var contentOpt = { fromDisable: 1 };
 
     if (rte && editable) {
       try {
@@ -34351,19 +34400,21 @@ module.exports = ComponentView.extend({
       var content = this.getChildrenContainer().innerHTML;
       var comps = model.get('components');
       comps.length && comps.reset();
-      model.set('content', '');
+      model.set('content', '', contentOpt);
 
       // If there is a custom RTE the content is just baked staticly
       // inside 'content'
       if (rte.customRte) {
         // Avoid double content by removing its children components
         // and force to trigger change
-        model.set('content', content);
+        model.set('content', content, contentOpt);
       } else {
         var clean = function clean(model) {
-          var selectable = !model.is('text');
+          var selectable = !['text', 'default', ''].some(function (type) {
+            return model.is(type);
+          });
           model.set({
-            editable: 0,
+            editable: selectable && model.get('editable'),
             highlightable: 0,
             removable: 0,
             draggable: 0,
@@ -34378,7 +34429,7 @@ module.exports = ComponentView.extend({
         };
 
         // Avoid re-render on reset with silent option
-        model.trigger('change:content', model);
+        model.trigger('change:content', model, '', contentOpt);
         comps.add(content);
         comps.each(function (model) {
           return clean(model);
@@ -34622,9 +34673,10 @@ module.exports = _backbone2.default.View.extend({
 
     var model = this.model;
     var config = opt.config || {};
+    var em = config.em;
     this.opts = opt;
     this.config = config;
-    this.em = config.em || '';
+    this.em = em || '';
     this.pfx = config.stylePrefix || '';
     this.ppfx = config.pStylePrefix || '';
     this.attr = model.get('attributes');
@@ -34851,10 +34903,12 @@ module.exports = _backbone2.default.View.extend({
    * */
   updateAttributes: function updateAttributes() {
     var model = this.model;
-    var defaultAttr = {
-      'data-gjs-type': model.get('type') || 'default',
-      'data-highlightable': model.get('highlightable') ? 1 : ''
-    };
+    var defaultAttr = { 'data-gjs-type': model.get('type') || 'default' };
+
+    if (model.get('highlightable')) {
+      defaultAttr['data-highlightable'] = 1;
+    }
+
     this.$el.attr(_extends({}, defaultAttr, model.getAttributes()));
     this.updateStyle();
   },
@@ -34962,8 +35016,16 @@ module.exports = _backbone2.default.View.extend({
     this.renderAttributes();
     this.renderChildren();
     this.updateScript();
-    this.onRender();
+    this.postRender();
+
     return this;
+  },
+  postRender: function postRender() {
+    var em = this.em,
+        model = this.model;
+
+    this.onRender();
+    em && em.trigger('component:mount', model);
   },
   onRender: function onRender() {}
 });
@@ -37066,6 +37128,8 @@ module.exports = function (config) {
     * ```
     *
     * ### Components
+    * * `component:create` - Component is created (only the model, is not yet mounted in the canvas)
+    * * `component:mount` - Component is monted to an element and rendered in canvas
     * * `component:add` - Triggered when a new component is added to the editor, the model is passed as an argument to the callback
     * * `component:remove` - Triggered when a component is removed, the model is passed as an argument to the callback
     * * `component:clone` - Triggered when a new component is added by a clone command, the model is passed as an argument to the callback
@@ -37825,13 +37889,15 @@ module.exports = Backbone.Model.extend({
         CssComposer = _attributes.CssComposer,
         UndoManager = _attributes.UndoManager,
         Panels = _attributes.Panels,
-        Canvas = _attributes.Canvas;
+        Canvas = _attributes.Canvas,
+        Keymaps = _attributes.Keymaps;
 
     DomComponents.clear();
     CssComposer.clear();
     UndoManager.clear().removeAll();
     Panels.getPanels().reset();
     Canvas.getCanvasView().remove();
+    Keymaps.removeAll();
     this.view.remove();
     this.stopListening();
     $(this.config.el).empty().attr(this.attrsOrig);
@@ -38103,6 +38169,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * * [get](#get)
                                                                                                                                                                                                                                                                    * * [getAll](#getAll)
                                                                                                                                                                                                                                                                    * * [remove](#remove)
+                                                                                                                                                                                                                                                                   * * [removeAll](#removeall)
                                                                                                                                                                                                                                                                    *
                                                                                                                                                                                                                                                                    * @module Keymaps
                                                                                                                                                                                                                                                                    */
@@ -38277,6 +38344,20 @@ module.exports = function () {
         em && em.trigger('keymap:remove', keymap);
         return keymap;
       }
+    },
+
+
+    /**
+     * Remove all binded keymaps
+     * @return {this}
+     */
+    removeAll: function removeAll() {
+      var _this = this;
+
+      Object.keys(keymaps).forEach(function (keymap) {
+        return _this.remove(keymap);
+      });
+      return this;
     }
   };
 };
@@ -39512,13 +39593,12 @@ module.exports = {
  *
  * * [addPanel](#addpanel)
  * * [addButton](#addbutton)
- * * [removeButton](#removebutton)
  * * [getButton](#getbutton)
  * * [getPanel](#getpanel)
  * * [getPanels](#getpanels)
  * * [getPanelsEl](#getpanelsel)
  * * [removePanel](#removepanel)
- * * [removeButton](#removeButton)
+ * * [removeButton](#removebutton)
  *
  * @module Panels
  */
@@ -39667,11 +39747,11 @@ module.exports = function () {
 
     /**
      * Remove button from the panel
-     * @param {string} panelId Panel's ID
-     * @param {Object|Button|String} button Button object or instance of Button or button id
+     * @param {String} panelId Panel's ID
+     * @param {String} buttonId Button's ID
      * @return {Button|null} Removed button.
      * @example
-     * const removedButton = panelManager.removeButton('myNewPanel',{
+     * const removedButton = panelManager.addButton('myNewPanel',{
      *   id: 'myNewButton',
      *   className: 'someClass',
      *   command: 'someCommand',
@@ -39679,8 +39759,7 @@ module.exports = function () {
      *   active: false,
      * });
      *
-     * // It's also possible to use the button id
-     * const removedButton = panelManager.removeButton('myNewPanel','myNewButton');
+     * const removedButton = panelManager.removeButton('myNewPanel', 'myNewButton');
      *
      */
     removeButton: function removeButton(panelId, button) {
@@ -41305,7 +41384,7 @@ module.exports = function () {
 
   var hideToolbar = function hideToolbar() {
     var style = toolbar.style;
-    var size = '-100px';
+    var size = '-1000px';
     style.top = size;
     style.left = size;
     style.display = 'none';
@@ -44330,7 +44409,7 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     }
   }, {
     id: 'select',
-    model: __webpack_require__(/*! ./PropertyRadio */ "./src/style_manager/model/PropertyRadio.js"),
+    model: __webpack_require__(/*! ./PropertySelect */ "./src/style_manager/model/PropertySelect.js").default,
     view: __webpack_require__(/*! ./../view/PropertySelectView */ "./src/style_manager/view/PropertySelectView.js"),
     isType: function isType(value) {
       if (value && value.type == 'select') {
@@ -44462,10 +44541,12 @@ var Property = __webpack_require__(/*! backbone */ "./node_modules/backbone/back
 
     var name = this.get('name');
     var prop = this.get('property');
+    !this.get('id') && this.set('id', prop);
 
     if (!name) {
       this.set('name', prop.charAt(0).toUpperCase() + prop.slice(1).replace(/-/g, ' '));
     }
+
     Property.callInit(this, props, opts);
   },
   init: function init() {},
@@ -45365,7 +45446,8 @@ module.exports = Property.extend({
   defaults: function defaults() {
     return _extends({}, Property.prototype.defaults, {
       // Array of options, eg. [{name: 'Label ', value: '100'}]
-      options: []
+      options: [],
+      full: 1
     });
   },
 
@@ -45399,6 +45481,38 @@ module.exports = Property.extend({
       this.setOptions([].concat(_toConsumableArray(opts), [opt]));
     }
     return this;
+  }
+});
+
+/***/ }),
+
+/***/ "./src/style_manager/model/PropertySelect.js":
+/*!***************************************************!*\
+  !*** ./src/style_manager/model/PropertySelect.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _PropertyRadio = __webpack_require__(/*! ./PropertyRadio */ "./src/style_manager/model/PropertyRadio.js");
+
+var _PropertyRadio2 = _interopRequireDefault(_PropertyRadio);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _PropertyRadio2.default.extend({
+  defaults: function defaults() {
+    return _extends({}, _PropertyRadio2.default.prototype.defaults, {
+      full: 0
+    });
   }
 });
 
@@ -47165,6 +47279,7 @@ module.exports = _backbone2.default.View.extend({
     var model = this.model;
     var value = model.getFullValue();
     var target = this.getTarget();
+    var prop = model.get('property');
     var onChange = this.onChange;
 
     // Avoid element update if the change comes from it
@@ -47188,10 +47303,12 @@ module.exports = _backbone2.default.View.extend({
       }
     }
 
-    if (em) {
-      em.trigger('component:update', target);
-      em.trigger('component:styleUpdate', target);
-      em.trigger('component:styleUpdate:' + model.get('property'), target);
+    var component = em && em.getSelected();
+
+    if (em && component) {
+      em.trigger('component:update', component);
+      em.trigger('component:styleUpdate', component, prop);
+      em.trigger('component:styleUpdate:' + prop, component);
     }
   },
 
@@ -47232,6 +47349,7 @@ module.exports = _backbone2.default.View.extend({
   isTargetStylable: function isTargetStylable(target) {
     var trg = target || this.getTarget();
     var model = this.model;
+    var id = model.get('id');
     var property = model.get('property');
     var toRequire = model.get('toRequire');
     var unstylable = trg.get('unstylable');
@@ -47251,7 +47369,7 @@ module.exports = _backbone2.default.View.extend({
 
     // Check if the property is available only if requested
     if (toRequire) {
-      stylable = stylableReq && stylableReq.indexOf(property) >= 0 || !target;
+      stylable = !target || stylableReq && (stylableReq.indexOf(id) >= 0 || stylableReq.indexOf(property) >= 0);
     }
 
     return stylable;

@@ -17,9 +17,10 @@ module.exports = Backbone.View.extend({
   initialize(opt = {}) {
     const model = this.model;
     const config = opt.config || {};
+    const em = config.em;
     this.opts = opt;
     this.config = config;
-    this.em = config.em || '';
+    this.em = em || '';
     this.pfx = config.stylePrefix || '';
     this.ppfx = config.pStylePrefix || '';
     this.attr = model.get('attributes');
@@ -232,10 +233,12 @@ module.exports = Backbone.View.extend({
    * */
   updateAttributes() {
     const model = this.model;
-    const defaultAttr = {
-      'data-gjs-type': model.get('type') || 'default',
-      'data-highlightable': model.get('highlightable') ? 1 : ''
-    };
+    const defaultAttr = { 'data-gjs-type': model.get('type') || 'default' };
+
+    if (model.get('highlightable')) {
+      defaultAttr['data-highlightable'] = 1;
+    }
+
     this.$el.attr({
       ...defaultAttr,
       ...model.getAttributes()
@@ -343,8 +346,15 @@ module.exports = Backbone.View.extend({
     this.renderAttributes();
     this.renderChildren();
     this.updateScript();
-    this.onRender();
+    this.postRender();
+
     return this;
+  },
+
+  postRender() {
+    const { em, model } = this;
+    this.onRender();
+    em && em.trigger('component:mount', model);
   },
 
   onRender() {}

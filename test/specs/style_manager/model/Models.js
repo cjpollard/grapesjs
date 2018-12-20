@@ -436,7 +436,7 @@ module.exports = {
           type: 'integer',
           units: ['px', '%', 'vh'],
           defaults: 'auto',
-          fixedValues: ['initial', 'inherit', 'auto'],
+          fixedValues: ['initial', 'inherit', 'auto', 'calc([0-9%-+pxvhw]+)'],
           min: 0
         };
         res.property = 'height';
@@ -743,7 +743,7 @@ module.exports = {
               property: 'border-top-left-radius',
               type: 'integer',
               units: ['px', '%'],
-              defaults: '0px',
+              defaults: 0,
               min: 0
             },
             {
@@ -751,21 +751,21 @@ module.exports = {
               type: 'integer',
               units: ['px', '%'],
               min: 0,
-              defaults: '0px'
+              defaults: 0
             },
             {
               property: 'border-bottom-right-radius',
               type: 'integer',
               units: ['px', '%'],
               min: 0,
-              defaults: '0px'
+              defaults: 0
             },
             {
               property: 'border-bottom-left-radius',
               type: 'integer',
               units: ['px', '%'],
               min: 0,
-              defaults: '0px'
+              defaults: 0
             }
           ]
         };

@@ -119,6 +119,24 @@ const Component = Backbone.Model.extend(Styleable).extend(
       toolbar: null
     },
 
+    /**
+     * Hook method, called once the model is created
+     */
+    init() {},
+
+    /**
+     * Hook method, called when the model has been updated (eg. updated some model's property)
+     * @param {String} property Property name, if triggered after some property update
+     * @param {*} value Property value, if triggered after some property update
+     * @param {*} previous Property previous value, if triggered after some property update
+     */
+    updated(property, value, previous) {},
+
+    /**
+     * Hook method, called once the model has been removed
+     */
+    removed() {},
+
     initialize(props = {}, opt = {}) {
       const em = opt.em;
 
@@ -171,10 +189,7 @@ const Component = Backbone.Model.extend(Styleable).extend(
         );
       });
       this.init();
-
-      if (em) {
-        em.trigger('component:create', this);
-      }
+      em && em.trigger('component:create', this);
     },
 
     /**
@@ -187,6 +202,15 @@ const Component = Backbone.Model.extend(Styleable).extend(
      */
     is(type) {
       return !!(this.get('type') == type);
+    },
+
+    /**
+     * Get the index of the component in the parent collection.
+     * @return {Number}
+     */
+    index() {
+      const { collection } = this;
+      return collection && collection.indexOf(this);
     },
 
     /**
@@ -504,8 +528,6 @@ const Component = Backbone.Model.extend(Styleable).extend(
       return this;
     },
 
-    init() {},
-
     /**
      * Add new component children
      * @param  {Component|String} components Component to add
@@ -716,7 +738,10 @@ const Component = Backbone.Model.extend(Styleable).extend(
         attr.style = style;
       }
 
-      return new this.constructor(attr, opts);
+      const cloned = new this.constructor(attr, opts);
+      em && em.trigger('component:clone', cloned);
+
+      return cloned;
     },
 
     getClasses() {
@@ -951,6 +976,13 @@ const Component = Backbone.Model.extend(Styleable).extend(
     emitUpdate(property, ...args) {
       const em = this.em;
       const event = 'component:update' + (property ? `:${property}` : '');
+      this.updated(
+        property,
+        property && this.get(property),
+        property && this.previous(property),
+        ...args
+      );
+      this.trigger(event, ...args);
       em && em.trigger(event, this, ...args);
     },
 

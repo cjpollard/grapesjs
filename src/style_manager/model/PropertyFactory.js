@@ -220,6 +220,12 @@ module.exports = () => ({
         case 'z-index':
           obj.defaults = 0;
           break;
+        case 'border-top-left-radius':
+        case 'border-top-right-radius':
+        case 'border-bottom-left-radius':
+        case 'border-bottom-right-radius':
+          obj.defaults = '0px';
+          break;
         case 'transform-scale-x':
         case 'transform-scale-y':
         case 'transform-scale-z':
@@ -297,6 +303,7 @@ module.exports = () => ({
       switch (prop) {
         case 'text-shadow-h':
         case 'text-shadow-v':
+        case 'text-shadow-h':
         case 'text-shadow-blur':
         case 'border-radius-c':
         case 'border-top-left-radius':

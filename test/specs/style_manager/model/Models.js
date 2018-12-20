@@ -391,44 +391,31 @@ module.exports = {
         ]);
       });
 
-      test('Build top, left, right, bottom', () => {
-        var resH = {
-          type: 'integer',
-          units: ['px', '%', 'vh'],
-          defaults: 0
-        };
-        var resW = {
+      test('Build left, right', () => {
+        var res = {
           type: 'integer',
           units: ['px', '%', 'vw'],
           defaults: 0
         };
-        resH.property = 'top';
-        expect(obj.build('top')).toEqual([resH]);
-        resW.property = 'right';
-        expect(obj.build('right')).toEqual([resW]);
-        resH.property = 'bottom';
-        expect(obj.build('bottom')).toEqual([resH]);
-        resW.property = 'left';
-        expect(obj.build('left')).toEqual([resW]);
+        res.property = 'right';
+        expect(obj.build('right')).toEqual([res]);
+        res.property = 'left';
+        expect(obj.build('left')).toEqual([res]);
       });
 
-      test('Build width and height family', () => {
+      test('Build top, bottom', () => {
         var res = {
           type: 'integer',
           units: ['px', '%', 'vh'],
-          defaults: 'auto',
-          fixedValues: ['initial', 'inherit', 'auto', 'calc([0-9%-+pxvhw]+)'],
-          min: 0
+          defaults: 0
         };
-        res.property = 'height';
-        expect(obj.build('height')).toEqual([res]);
-        res.property = 'min-height';
-        expect(obj.build('min-height')).toEqual([res]);
-        res.property = 'max-height';
-        expect(obj.build('max-height')).toEqual([res]);
+        res.property = 'top';
+        expect(obj.build('top')).toEqual([res]);
+        res.property = 'bottom';
+        expect(obj.build('bottom')).toEqual([res]);
       });
 
-      it('Build width family', () => {
+      test('Build width family', () => {
         var res = {
           type: 'integer',
           units: ['px', '%', 'vw'],
@@ -442,6 +429,22 @@ module.exports = {
         expect(obj.build('min-width')).toEqual([res]);
         res.property = 'max-width';
         expect(obj.build('max-width')).toEqual([res]);
+      });
+
+      test('Build height family', () => {
+        var res = {
+          type: 'integer',
+          units: ['px', '%', 'vh'],
+          defaults: 'auto',
+          fixedValues: ['initial', 'inherit', 'auto'],
+          min: 0
+        };
+        res.property = 'height';
+        expect(obj.build('height')).toEqual([res]);
+        res.property = 'min-height';
+        expect(obj.build('min-height')).toEqual([res]);
+        res.property = 'max-height';
+        expect(obj.build('max-height')).toEqual([res]);
       });
 
       test('Build margin', () => {
@@ -740,7 +743,7 @@ module.exports = {
               property: 'border-top-left-radius',
               type: 'integer',
               units: ['px', '%'],
-              defaults: 0,
+              defaults: '0px',
               min: 0
             },
             {
@@ -748,21 +751,21 @@ module.exports = {
               type: 'integer',
               units: ['px', '%'],
               min: 0,
-              defaults: 0
+              defaults: '0px'
             },
             {
               property: 'border-bottom-right-radius',
               type: 'integer',
               units: ['px', '%'],
               min: 0,
-              defaults: 0
+              defaults: '0px'
             },
             {
               property: 'border-bottom-left-radius',
               type: 'integer',
               units: ['px', '%'],
               min: 0,
-              defaults: 0
+              defaults: '0px'
             }
           ]
         };

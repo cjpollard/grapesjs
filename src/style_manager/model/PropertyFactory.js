@@ -52,6 +52,8 @@ module.exports = () => ({
             'auto',
             'calc([0-9%-+pxvhw]+)'
           ];
+        case 'flex-basis':
+          obj.fixedValues = ['initial', 'inherit', 'auto'];
           break;
         case 'font-size':
           obj.fixedValues = [
@@ -83,6 +85,12 @@ module.exports = () => ({
           obj.type = 'radio';
           break;
         case 'display':
+        case 'flex-direction':
+        case 'flex-wrap':
+        case 'justify-content':
+        case 'align-items':
+        case 'align-content':
+        case 'align-self':
         case 'font-family':
         case 'font-weight':
         case 'border-style':
@@ -96,6 +104,8 @@ module.exports = () => ({
         case 'cursor':
         case 'overflow':
         case 'text-transform':
+        case 'overflow-x':
+        case 'overflow-y':
           obj.type = 'select';
           break;
         case 'top':
@@ -145,6 +155,10 @@ module.exports = () => ({
         case 'transform-translate-x':
         case 'transform-translate-y':
         case 'z-index':
+        case 'order':
+        case 'flex-grow':
+        case 'flex-shrink':
+        case 'flex-basis':
           obj.type = 'integer';
           break;
         case 'margin':
@@ -183,6 +197,24 @@ module.exports = () => ({
         case 'display':
           obj.defaults = 'block';
           break;
+        case 'flex-direction':
+          obj.defaults = 'row';
+          break;
+        case 'flex-wrap':
+          obj.defaults = 'nowrap';
+          break;
+        case 'justify-content':
+          obj.defaults = 'flex-start';
+          break;
+        case 'align-items':
+          obj.defaults = 'stretch';
+          break;
+        case 'align-content':
+          obj.defaults = 'stretch';
+          break;
+        case 'align-self':
+          obj.defaults = 'auto';
+          break;
         case 'position':
           obj.defaults = 'static';
           break;
@@ -218,6 +250,8 @@ module.exports = () => ({
         case 'transform-translate-x':
         case 'transform-translate-y':
         case 'z-index':
+        case 'order':
+        case 'flex-grow':
           obj.defaults = 0;
           break;
         case 'border-top-left-radius':
@@ -229,6 +263,7 @@ module.exports = () => ({
         case 'transform-scale-x':
         case 'transform-scale-y':
         case 'transform-scale-z':
+        case 'flex-shrink':
           obj.defaults = 1;
           break;
         case 'box-shadow-blur':
@@ -242,6 +277,7 @@ module.exports = () => ({
         case 'height':
         case 'background-size':
         case 'cursor':
+        case 'flex-basis':
           obj.defaults = 'auto';
           break;
         case 'font-family':
@@ -292,10 +328,36 @@ module.exports = () => ({
           obj.defaults = 'ease';
           break;
         case 'overflow':
+        case 'overflow-x':
+        case 'overflow-y':
           obj.defaults = 'visible';
           break;
         case 'text-transform':
           obj.defaults = 'none';
+          break;
+      }
+
+      /*
+       * Add styleable dependency on other properties. Allows properties to be
+       * dynamically hidden or shown based on values of other properties.
+       *
+       * Property will be styleable if all of the properties (keys) in the
+       * requires object have any of the values specified in the array.
+       */
+      switch (prop) {
+        case 'flex-direction':
+        case 'flex-wrap':
+        case 'justify-content':
+        case 'align-items':
+        case 'align-content':
+          obj.requires = { display: ['flex'] };
+          break;
+        case 'order':
+        case 'flex-basis':
+        case 'flex-grow':
+        case 'flex-shrink':
+        case 'align-self':
+          obj.requiresParent = { display: ['flex'] };
           break;
       }
 
@@ -337,6 +399,21 @@ module.exports = () => ({
         case 'max-width':
         case 'width':
           obj.units = ['px', '%', 'vw'];
+          break;
+        case 'flex-basis':
+          obj.units = ['px', '%', 'vw', 'vh'];
+          break;
+        case 'text-shadow-v':
+        case 'text-shadow-h':
+        case 'text-shadow-blur':
+        case 'border-radius-c':
+        case 'border-top-left-radius':
+        case 'border-top-right-radius':
+        case 'border-bottom-left-radius':
+        case 'border-bottom-right-radius':
+        case 'box-shadow-h':
+        case 'box-shadow-v':
+          obj.units = ['px', '%'];
           break;
         case 'font-size':
         case 'letter-spacing':
@@ -388,6 +465,7 @@ module.exports = () => ({
         case 'box-shadow-blur':
         case 'transition-duration':
         case 'perspective':
+        case 'flex-basis':
           obj.min = 0;
           break;
       }
@@ -449,7 +527,62 @@ module.exports = () => ({
             { value: 'block' },
             { value: 'inline' },
             { value: 'inline-block' },
+            { value: 'flex' },
             { value: 'none' }
+          ];
+          break;
+        case 'flex-direction':
+          obj.list = [
+            { value: 'row' },
+            { value: 'row-reverse' },
+            { value: 'column' },
+            { value: 'column-reverse' }
+          ];
+          break;
+        case 'flex-wrap':
+          obj.list = [
+            { value: 'nowrap' },
+            { value: 'wrap' },
+            { value: 'wrap-reverse' }
+          ];
+          break;
+        case 'justify-content':
+          obj.list = [
+            { value: 'flex-start' },
+            { value: 'flex-end' },
+            { value: 'center' },
+            { value: 'space-between' },
+            { value: 'space-around' },
+            { value: 'space-evenly' }
+          ];
+          break;
+        case 'align-items':
+          obj.list = [
+            { value: 'flex-start' },
+            { value: 'flex-end' },
+            { value: 'center' },
+            { value: 'baseline' },
+            { value: 'stretch' }
+          ];
+          break;
+        case 'align-content':
+          obj.list = [
+            { value: 'flex-start' },
+            { value: 'flex-end' },
+            { value: 'center' },
+            { value: 'space-between' },
+            { value: 'space-around' },
+            { value: 'stretch' }
+          ];
+          break;
+        case 'align-self':
+          obj.list = [
+            { value: 'auto' },
+            { value: 'flex-start' },
+            { value: 'flex-end' },
+            { value: 'center' },
+            { value: 'baseline' },
+            { value: 'stretch' }
           ];
           break;
         case 'position':
@@ -594,6 +727,8 @@ module.exports = () => ({
           ];
           break;
         case 'overflow':
+        case 'overflow-x':
+        case 'overflow-y':
           obj.list = [
             { value: 'visible' },
             { value: 'hidden' },

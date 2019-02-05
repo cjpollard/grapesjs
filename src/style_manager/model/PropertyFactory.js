@@ -52,6 +52,7 @@ module.exports = () => ({
             'auto',
             'calc([0-9%-+pxvhw]+)'
           ];
+          break;
         case 'flex-basis':
           obj.fixedValues = ['initial', 'inherit', 'auto'];
           break;

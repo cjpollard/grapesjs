@@ -491,12 +491,10 @@ const Component = Backbone.Model.extend(Styleable).extend(
         this.get('type') !== '' ? [this.get('type')] : [];
       const event = 'change:classes';
       const toListen = [this, event, this.initClasses];
-      const cls = this.get('classes') || [];
+      const cls = this.get('classes') || addTypeToClasses;
       const clsArr = isString(cls) ? cls.split(' ') : cls;
       this.stopListening(...toListen);
-      const classes = this.normalizeClasses(
-        clsArr || addTypeToClasses
-      );
+      const classes = this.normalizeClasses(clsArr);
       const selectors = new Selectors([]);
       this.set('classes', selectors);
       selectors.add(classes);
